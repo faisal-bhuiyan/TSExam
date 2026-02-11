@@ -9,6 +9,7 @@ using tsexam::problem2::Point;
 using tsexam::problem2::Polyline;
 using tsexam::problem2::PolylineRepresentation;
 using tsexam::problem2::PolylineType;
+using tsexam::problem2::VertexIndex;
 
 //----------------------------------------------------------------------------------
 // Part (A): Compressed Vertex Ordering — Determinism
@@ -21,44 +22,44 @@ using tsexam::problem2::PolylineType;
 TEST(PartA_Determinism, CanonicalOrder) {
     //  0 --- 1 --- 2 --- 3
     // Segments in natural order: (0,1), (1,2), (2,3)
-    const std::vector<size_t> segments = {0, 1, 1, 2, 2, 3};
+    const std::vector<VertexIndex> segments = {0, 1, 1, 2, 2, 3};
     Polyline p(PolylineRepresentation::kVerboseSegments, segments);
-    EXPECT_EQ(p.GetCompressedSegments(), (std::vector<size_t>{0, 1, 2, 3}));
+    EXPECT_EQ(p.GetCompressedSegments(), (std::vector<VertexIndex>{0, 1, 2, 3}));
 }
 
 TEST(PartA_Determinism, PermutedSegmentOrder) {
     // Same segments, different order: (2,3), (0,1), (1,2)
-    const std::vector<size_t> segments = {2, 3, 0, 1, 1, 2};
+    const std::vector<VertexIndex> segments = {2, 3, 0, 1, 1, 2};
     Polyline p(PolylineRepresentation::kVerboseSegments, segments);
-    EXPECT_EQ(p.GetCompressedSegments(), (std::vector<size_t>{0, 1, 2, 3}));
+    EXPECT_EQ(p.GetCompressedSegments(), (std::vector<VertexIndex>{0, 1, 2, 3}));
 }
 
 TEST(PartA_Determinism, FlippedVerticesWithinSegments) {
     // Each segment's vertex pair is flipped: (1,0), (2,1), (3,2)
-    const std::vector<size_t> segments = {1, 0, 2, 1, 3, 2};
+    const std::vector<VertexIndex> segments = {1, 0, 2, 1, 3, 2};
     Polyline p(PolylineRepresentation::kVerboseSegments, segments);
-    EXPECT_EQ(p.GetCompressedSegments(), (std::vector<size_t>{0, 1, 2, 3}));
+    EXPECT_EQ(p.GetCompressedSegments(), (std::vector<VertexIndex>{0, 1, 2, 3}));
 }
 
 TEST(PartA_Determinism, PermutedAndFlipped) {
     // Both permuted and flipped: (3,2), (1,0), (2,1)
-    const std::vector<size_t> segments = {3, 2, 1, 0, 2, 1};
+    const std::vector<VertexIndex> segments = {3, 2, 1, 0, 2, 1};
     Polyline p(PolylineRepresentation::kVerboseSegments, segments);
-    EXPECT_EQ(p.GetCompressedSegments(), (std::vector<size_t>{0, 1, 2, 3}));
+    EXPECT_EQ(p.GetCompressedSegments(), (std::vector<VertexIndex>{0, 1, 2, 3}));
 }
 
 TEST(PartA_Determinism, AnotherMixedVariant) {
     // Another permutation + partial flip: (1,2), (3,2), (0,1)
-    const std::vector<size_t> segments = {1, 2, 3, 2, 0, 1};
+    const std::vector<VertexIndex> segments = {1, 2, 3, 2, 0, 1};
     Polyline p(PolylineRepresentation::kVerboseSegments, segments);
-    EXPECT_EQ(p.GetCompressedSegments(), (std::vector<size_t>{0, 1, 2, 3}));
+    EXPECT_EQ(p.GetCompressedSegments(), (std::vector<VertexIndex>{0, 1, 2, 3}));
 }
 
 TEST(PartA_Determinism, ReverseCanonical) {
     // Segments listed in reverse: (2,3), (1,2), (0,1)
-    const std::vector<size_t> segments = {2, 3, 1, 2, 0, 1};
+    const std::vector<VertexIndex> segments = {2, 3, 1, 2, 0, 1};
     Polyline p(PolylineRepresentation::kVerboseSegments, segments);
-    EXPECT_EQ(p.GetCompressedSegments(), (std::vector<size_t>{0, 1, 2, 3}));
+    EXPECT_EQ(p.GetCompressedSegments(), (std::vector<VertexIndex>{0, 1, 2, 3}));
 }
 
 TEST(PartA_Determinism, ExamFigure3Example) {
@@ -67,9 +68,9 @@ TEST(PartA_Determinism, ExamFigure3Example) {
     // Exam Figure 3: segments given as [0, 1, 3, 2, 1, 2]
     //   seg 0: (0,1)   seg 1: (3,2)   seg 2: (1,2)
     // After compression: [0, 1, 2, 3]
-    const std::vector<size_t> segments = {0, 1, 3, 2, 1, 2};
+    const std::vector<VertexIndex> segments = {0, 1, 3, 2, 1, 2};
     Polyline p(PolylineRepresentation::kVerboseSegments, segments);
-    EXPECT_EQ(p.GetCompressedSegments(), (std::vector<size_t>{0, 1, 2, 3}));
+    EXPECT_EQ(p.GetCompressedSegments(), (std::vector<VertexIndex>{0, 1, 2, 3}));
 }
 
 //----------------------------------------------------------------------------------
@@ -80,47 +81,47 @@ TEST(PartA_EdgeCases, SingleSegment) {
     //  1 --- 3
     // Minimal polyline: one segment connecting vertices 3 and 1
     // Start at the smaller endpoint -> [1, 3]
-    const std::vector<size_t> segments = {3, 1};
+    const std::vector<VertexIndex> segments = {3, 1};
     Polyline p(PolylineRepresentation::kVerboseSegments, segments);
-    EXPECT_EQ(p.GetCompressedSegments(), (std::vector<size_t>{1, 3}));
+    EXPECT_EQ(p.GetCompressedSegments(), (std::vector<VertexIndex>{1, 3}));
 }
 
 TEST(PartA_EdgeCases, SingleSegmentFlipped) {
     // Same segment flipped: (1, 3) instead of (3, 1)
-    const std::vector<size_t> segments = {1, 3};
+    const std::vector<VertexIndex> segments = {1, 3};
     Polyline p(PolylineRepresentation::kVerboseSegments, segments);
-    EXPECT_EQ(p.GetCompressedSegments(), (std::vector<size_t>{1, 3}));
+    EXPECT_EQ(p.GetCompressedSegments(), (std::vector<VertexIndex>{1, 3}));
 }
 
 TEST(PartA_EdgeCases, TwoSegments) {
     //  0 --- 2 --- 1
     // Start at smaller endpoint (0), walk to 2, then to 1 -> [0, 2, 1]
-    const std::vector<size_t> segments = {2, 0, 2, 1};
+    const std::vector<VertexIndex> segments = {2, 0, 2, 1};
     Polyline p(PolylineRepresentation::kVerboseSegments, segments);
-    EXPECT_EQ(p.GetCompressedSegments(), (std::vector<size_t>{0, 2, 1}));
+    EXPECT_EQ(p.GetCompressedSegments(), (std::vector<VertexIndex>{0, 2, 1}));
 }
 
 TEST(PartA_EdgeCases, TwoSegmentsPermuted) {
     // Same two segments permuted: (2,1), (2,0)
-    const std::vector<size_t> segments = {2, 1, 2, 0};
+    const std::vector<VertexIndex> segments = {2, 1, 2, 0};
     Polyline p(PolylineRepresentation::kVerboseSegments, segments);
-    EXPECT_EQ(p.GetCompressedSegments(), (std::vector<size_t>{0, 2, 1}));
+    EXPECT_EQ(p.GetCompressedSegments(), (std::vector<VertexIndex>{0, 2, 1}));
 }
 
 TEST(PartA_EdgeCases, LongerChainFiveVertices) {
     //  0 --- 1 --- 2 --- 3 --- 4
     // Scrambled segments: (3,4), (0,1), (2,1), (3,2)
-    const std::vector<size_t> segments = {3, 4, 0, 1, 2, 1, 3, 2};
+    const std::vector<VertexIndex> segments = {3, 4, 0, 1, 2, 1, 3, 2};
     Polyline p(PolylineRepresentation::kVerboseSegments, segments);
-    EXPECT_EQ(p.GetCompressedSegments(), (std::vector<size_t>{0, 1, 2, 3, 4}));
+    EXPECT_EQ(p.GetCompressedSegments(), (std::vector<VertexIndex>{0, 1, 2, 3, 4}));
 }
 
 TEST(PartA_EdgeCases, NonContiguousVertexIndices) {
     //  1 --- 3 --- 5       (vertices 0, 2, 4 not used)
     // Segments: (5,3), (1,3) -> permuted and partially flipped
-    const std::vector<size_t> segments = {5, 3, 1, 3};
+    const std::vector<VertexIndex> segments = {5, 3, 1, 3};
     Polyline p(PolylineRepresentation::kVerboseSegments, segments);
-    EXPECT_EQ(p.GetCompressedSegments(), (std::vector<size_t>{1, 3, 5}));
+    EXPECT_EQ(p.GetCompressedSegments(), (std::vector<VertexIndex>{1, 3, 5}));
 }
 
 //----------------------------------------------------------------------------------
@@ -130,10 +131,12 @@ TEST(PartA_EdgeCases, NonContiguousVertexIndices) {
 // participating vertex and follows the first neighbor found.
 
 TEST(PartA_Polygon, ClosedTriangle) {
-    //      0
-    //     / \
-    //    2---1
-    const std::vector<size_t> segments = {0, 1, 1, 2, 2, 0};
+    /*
+     *      0
+     *     / \
+     *    2---1
+     */
+    const std::vector<VertexIndex> segments = {0, 1, 1, 2, 2, 0};
     Polyline p(PolylineRepresentation::kVerboseSegments, segments);
     const auto& ordering = p.GetCompressedSegments();
     // Must start and end at the same vertex
@@ -145,10 +148,12 @@ TEST(PartA_Polygon, ClosedTriangle) {
 }
 
 TEST(PartA_Polygon, ClosedQuad) {
-    //  0 --- 1
-    //  |     |
-    //  3 --- 2
-    const std::vector<size_t> segments = {0, 1, 1, 2, 2, 3, 3, 0};
+    /*
+     *  0 --- 1
+     *  |     |
+     *  3 --- 2
+     */
+    const std::vector<VertexIndex> segments = {0, 1, 1, 2, 2, 3, 3, 0};
     Polyline p(PolylineRepresentation::kVerboseSegments, segments);
     const auto& ordering = p.GetCompressedSegments();
     EXPECT_EQ(ordering.front(), ordering.back());
@@ -158,7 +163,7 @@ TEST(PartA_Polygon, ClosedQuad) {
 
 TEST(PartA_Polygon, ClosedQuadPermutedAndFlipped) {
     // Same quadrilateral with scrambled segments: (3,0), (2,1), (0,1), (3,2)
-    const std::vector<size_t> segments = {3, 0, 2, 1, 0, 1, 3, 2};
+    const std::vector<VertexIndex> segments = {3, 0, 2, 1, 0, 1, 3, 2};
     Polyline p(PolylineRepresentation::kVerboseSegments, segments);
     const auto& ordering = p.GetCompressedSegments();
     EXPECT_EQ(ordering.front(), ordering.back());
@@ -168,7 +173,7 @@ TEST(PartA_Polygon, ClosedQuadPermutedAndFlipped) {
 
 TEST(PartA_Polygon, ClosedTrianglePermutedAndFlipped) {
     // Triangle scrambled: (2,0), (1,0), (2,1)
-    const std::vector<size_t> segments = {2, 0, 1, 0, 2, 1};
+    const std::vector<VertexIndex> segments = {2, 0, 1, 0, 2, 1};
     Polyline p(PolylineRepresentation::kVerboseSegments, segments);
     const auto& ordering = p.GetCompressedSegments();
     EXPECT_EQ(ordering.front(), ordering.back());
@@ -185,7 +190,7 @@ TEST(PartA_Polygon, ClosedTrianglePermutedAndFlipped) {
 
 TEST(PartB_IsPolygon, OpenPolylineFromSegments) {
     //  0 --- 1 --- 2 --- 3    (endpoints at 0 and 3)
-    const std::vector<size_t> segments = {0, 1, 1, 2, 2, 3};
+    const std::vector<VertexIndex> segments = {0, 1, 1, 2, 2, 3};
     Polyline p(PolylineRepresentation::kVerboseSegments, segments);
     EXPECT_FALSE(p.IsPolygon());
     EXPECT_EQ(p.GetType(), PolylineType::kOpen);
@@ -195,21 +200,21 @@ TEST(PartB_IsPolygon, ClosedPolygonFromSegments) {
     //  0 --- 1
     //  |     |    (all degree 2)
     //  3 --- 2
-    const std::vector<size_t> segments = {0, 1, 1, 2, 2, 3, 3, 0};
+    const std::vector<VertexIndex> segments = {0, 1, 1, 2, 2, 3, 3, 0};
     Polyline p(PolylineRepresentation::kVerboseSegments, segments);
     EXPECT_TRUE(p.IsPolygon());
     EXPECT_EQ(p.GetType(), PolylineType::kClosed);
 }
 
 TEST(PartB_IsPolygon, ClosedTriangleFromSegments) {
-    const std::vector<size_t> segments = {0, 1, 1, 2, 2, 0};
+    const std::vector<VertexIndex> segments = {0, 1, 1, 2, 2, 0};
     Polyline p(PolylineRepresentation::kVerboseSegments, segments);
     EXPECT_TRUE(p.IsPolygon());
     EXPECT_EQ(p.GetType(), PolylineType::kClosed);
 }
 
 TEST(PartB_IsPolygon, SingleSegmentIsOpen) {
-    const std::vector<size_t> segments = {0, 1};
+    const std::vector<VertexIndex> segments = {0, 1};
     Polyline p(PolylineRepresentation::kVerboseSegments, segments);
     EXPECT_FALSE(p.IsPolygon());
     EXPECT_EQ(p.GetType(), PolylineType::kOpen);
@@ -217,7 +222,7 @@ TEST(PartB_IsPolygon, SingleSegmentIsOpen) {
 
 TEST(PartB_IsPolygon, OpenPolylineFromCompressedOrdering) {
     // Compressed ordering for open polyline: [0, 1, 2, 3] — front != back
-    const std::vector<size_t> ordering = {0, 1, 2, 3};
+    const std::vector<VertexIndex> ordering = {0, 1, 2, 3};
     Polyline p(PolylineRepresentation::kCompressedVertexOrdering, ordering);
     EXPECT_FALSE(p.IsPolygon());
     EXPECT_EQ(p.GetType(), PolylineType::kOpen);
@@ -225,21 +230,21 @@ TEST(PartB_IsPolygon, OpenPolylineFromCompressedOrdering) {
 
 TEST(PartB_IsPolygon, ClosedPolygonFromCompressedOrdering) {
     // Compressed ordering for polygon: [0, 1, 2, 3, 0] — front == back
-    const std::vector<size_t> ordering = {0, 1, 2, 3, 0};
+    const std::vector<VertexIndex> ordering = {0, 1, 2, 3, 0};
     Polyline p(PolylineRepresentation::kCompressedVertexOrdering, ordering);
     EXPECT_TRUE(p.IsPolygon());
     EXPECT_EQ(p.GetType(), PolylineType::kClosed);
 }
 
 TEST(PartB_IsPolygon, ClosedTriangleFromCompressedOrdering) {
-    const std::vector<size_t> ordering = {0, 1, 2, 0};
+    const std::vector<VertexIndex> ordering = {0, 1, 2, 0};
     Polyline p(PolylineRepresentation::kCompressedVertexOrdering, ordering);
     EXPECT_TRUE(p.IsPolygon());
     EXPECT_EQ(p.GetType(), PolylineType::kClosed);
 }
 
 TEST(PartB_IsPolygon, TwoVertexOpenFromCompressedOrdering) {
-    const std::vector<size_t> ordering = {1, 3};
+    const std::vector<VertexIndex> ordering = {1, 3};
     Polyline p(PolylineRepresentation::kCompressedVertexOrdering, ordering);
     EXPECT_FALSE(p.IsPolygon());
     EXPECT_EQ(p.GetType(), PolylineType::kOpen);
@@ -252,7 +257,7 @@ TEST(PartB_IsPolygon, TwoVertexOpenFromCompressedOrdering) {
 // gives the same answer as constructing from the resulting compressed ordering.
 
 TEST(PartB_Roundtrip, OpenPolyline) {
-    const std::vector<size_t> segments = {3, 2, 1, 0, 2, 1};
+    const std::vector<VertexIndex> segments = {3, 2, 1, 0, 2, 1};
     Polyline from_raw(PolylineRepresentation::kVerboseSegments, segments);
     EXPECT_FALSE(from_raw.IsPolygon());
 
@@ -264,7 +269,7 @@ TEST(PartB_Roundtrip, OpenPolyline) {
 }
 
 TEST(PartB_Roundtrip, ClosedPolygon) {
-    const std::vector<size_t> segments = {3, 0, 2, 1, 0, 1, 3, 2};
+    const std::vector<VertexIndex> segments = {3, 0, 2, 1, 0, 1, 3, 2};
     Polyline from_raw(PolylineRepresentation::kVerboseSegments, segments);
     EXPECT_TRUE(from_raw.IsPolygon());
 
@@ -281,14 +286,14 @@ TEST(PartB_Roundtrip, ClosedPolygon) {
 // Verify that GetType() agrees with IsPolygon() for every construction path.
 
 TEST(TypeConsistency, OpenPolylineType) {
-    const std::vector<size_t> segments = {0, 1, 1, 2};
+    const std::vector<VertexIndex> segments = {0, 1, 1, 2};
     Polyline p(PolylineRepresentation::kVerboseSegments, segments);
     EXPECT_EQ(p.GetType(), PolylineType::kOpen);
     EXPECT_FALSE(p.IsPolygon());
 }
 
 TEST(TypeConsistency, ClosedPolygonType) {
-    const std::vector<size_t> segments = {0, 1, 1, 2, 2, 0};
+    const std::vector<VertexIndex> segments = {0, 1, 1, 2, 2, 0};
     Polyline p(PolylineRepresentation::kVerboseSegments, segments);
     EXPECT_EQ(p.GetType(), PolylineType::kClosed);
     EXPECT_TRUE(p.IsPolygon());
@@ -334,7 +339,7 @@ TEST(InputValidation, VertexDegreeGreaterThan2Throws) {
     //        0
     //        |             vertex 1 has degree 3 -> invalid
     //  2 --- 1 --- 3
-    const std::vector<size_t> segments = {0, 1, 1, 2, 1, 3};
+    const std::vector<VertexIndex> segments = {0, 1, 1, 2, 1, 3};
     EXPECT_THROW(
         Polyline(PolylineRepresentation::kVerboseSegments, segments), std::invalid_argument
     );
@@ -342,7 +347,7 @@ TEST(InputValidation, VertexDegreeGreaterThan2Throws) {
 
 TEST(InputValidation, FourEndpointsThrows) {
     //  0 --- 1     2 --- 3   (disconnected: four degree-1 vertices)
-    const std::vector<size_t> segments = {0, 1, 2, 3};
+    const std::vector<VertexIndex> segments = {0, 1, 2, 3};
     EXPECT_THROW(
         Polyline(PolylineRepresentation::kVerboseSegments, segments), std::invalid_argument
     );
@@ -357,7 +362,7 @@ TEST(VerticesConstructor, VerticesStored) {
         {0., 0., 0.}, {1., 0., 0.}, {2., 0., 0.}, {3., 0., 0.},
         {4., 0., 0.}, {5., 0., 0.}, {6., 0., 0.}, {7., 0., 0.},
     };
-    const std::vector<size_t> segments = {0, 1, 1, 2};
+    const std::vector<VertexIndex> segments = {0, 1, 1, 2};
     Polyline p(PolylineRepresentation::kVerboseSegments, segments, vertices);
     EXPECT_EQ(p.GetVertices(), vertices);
 }
@@ -367,7 +372,7 @@ TEST(VerticesConstructor, SameBehaviorAsWithout) {
         {0., 0., 0.}, {1., 0., 0.}, {2., 0., 0.}, {3., 0., 0.},
         {4., 0., 0.}, {5., 0., 0.}, {6., 0., 0.}, {7., 0., 0.},
     };
-    const std::vector<size_t> segments = {0, 1, 1, 2, 2, 3};
+    const std::vector<VertexIndex> segments = {0, 1, 1, 2, 2, 3};
     Polyline with_verts(PolylineRepresentation::kVerboseSegments, segments, vertices);
     Polyline without_verts(PolylineRepresentation::kVerboseSegments, segments);
     EXPECT_EQ(with_verts.GetCompressedSegments(), without_verts.GetCompressedSegments());
@@ -386,40 +391,40 @@ TEST(VerticesConstructor, SameBehaviorAsWithout) {
 TEST(SparseVertices, GapInMiddleOpenPolyline) {
     //  0 --- 1 --- 3       (vertex 2 unused)
     // Segments: (0,1), (1,3)
-    const std::vector<size_t> segments = {0, 1, 1, 3};
+    const std::vector<VertexIndex> segments = {0, 1, 1, 3};
     Polyline p(PolylineRepresentation::kVerboseSegments, segments);
-    EXPECT_EQ(p.GetCompressedSegments(), (std::vector<size_t>{0, 1, 3}));
+    EXPECT_EQ(p.GetCompressedSegments(), (std::vector<VertexIndex>{0, 1, 3}));
     EXPECT_FALSE(p.IsPolygon());
 }
 
 TEST(SparseVertices, GapInMiddlePermuted) {
     // Same polyline, segments permuted and flipped: (3,1), (1,0)
-    const std::vector<size_t> segments = {3, 1, 1, 0};
+    const std::vector<VertexIndex> segments = {3, 1, 1, 0};
     Polyline p(PolylineRepresentation::kVerboseSegments, segments);
-    EXPECT_EQ(p.GetCompressedSegments(), (std::vector<size_t>{0, 1, 3}));
+    EXPECT_EQ(p.GetCompressedSegments(), (std::vector<VertexIndex>{0, 1, 3}));
 }
 
 TEST(SparseVertices, LargeGapBetweenIndices) {
     //  0 --- 1 --- 100     (vertices 2..99 unused)
-    const std::vector<size_t> segments = {100, 1, 0, 1};
+    const std::vector<VertexIndex> segments = {100, 1, 0, 1};
     Polyline p(PolylineRepresentation::kVerboseSegments, segments);
-    EXPECT_EQ(p.GetCompressedSegments(), (std::vector<size_t>{0, 1, 100}));
+    EXPECT_EQ(p.GetCompressedSegments(), (std::vector<VertexIndex>{0, 1, 100}));
     EXPECT_FALSE(p.IsPolygon());
 }
 
 TEST(SparseVertices, OnlyHighIndicesUsed) {
     //  5 --- 7 --- 9       (vertices 0..4, 6, 8 unused)
-    const std::vector<size_t> segments = {9, 7, 5, 7};
+    const std::vector<VertexIndex> segments = {9, 7, 5, 7};
     Polyline p(PolylineRepresentation::kVerboseSegments, segments);
-    EXPECT_EQ(p.GetCompressedSegments(), (std::vector<size_t>{5, 7, 9}));
+    EXPECT_EQ(p.GetCompressedSegments(), (std::vector<VertexIndex>{5, 7, 9}));
     EXPECT_FALSE(p.IsPolygon());
 }
 
 TEST(SparseVertices, SingleSegmentWithLargeGap) {
     //  0 --- 5             (vertices 1..4 unused)
-    const std::vector<size_t> segments = {0, 5};
+    const std::vector<VertexIndex> segments = {0, 5};
     Polyline p(PolylineRepresentation::kVerboseSegments, segments);
-    EXPECT_EQ(p.GetCompressedSegments(), (std::vector<size_t>{0, 5}));
+    EXPECT_EQ(p.GetCompressedSegments(), (std::vector<VertexIndex>{0, 5}));
     EXPECT_FALSE(p.IsPolygon());
 }
 
@@ -428,7 +433,7 @@ TEST(SparseVertices, PolygonWithGaps) {
     //     / \              (vertices 1 and 3 unused)
     //    4---2
     // Segments: (0,2), (2,4), (4,0)
-    const std::vector<size_t> segments = {0, 2, 2, 4, 4, 0};
+    const std::vector<VertexIndex> segments = {0, 2, 2, 4, 4, 0};
     Polyline p(PolylineRepresentation::kVerboseSegments, segments);
     const auto& ordering = p.GetCompressedSegments();
     EXPECT_TRUE(p.IsPolygon());
@@ -439,7 +444,7 @@ TEST(SparseVertices, PolygonWithGaps) {
 
 TEST(SparseVertices, PolygonWithGapsPermuted) {
     // Same triangle, scrambled: (4,0), (2,0), (4,2)
-    const std::vector<size_t> segments = {4, 0, 2, 0, 4, 2};
+    const std::vector<VertexIndex> segments = {4, 0, 2, 0, 4, 2};
     Polyline p(PolylineRepresentation::kVerboseSegments, segments);
     const auto& ordering = p.GetCompressedSegments();
     EXPECT_TRUE(p.IsPolygon());
@@ -450,9 +455,9 @@ TEST(SparseVertices, PolygonWithGapsPermuted) {
 TEST(SparseVertices, LongerChainMultipleGaps) {
     //  1 --- 3 --- 5 --- 7 --- 9   (only odd vertices, all evens unused)
     // Segments scrambled: (7,9), (3,1), (5,3), (7,5)
-    const std::vector<size_t> segments = {7, 9, 3, 1, 5, 3, 7, 5};
+    const std::vector<VertexIndex> segments = {7, 9, 3, 1, 5, 3, 7, 5};
     Polyline p(PolylineRepresentation::kVerboseSegments, segments);
-    EXPECT_EQ(p.GetCompressedSegments(), (std::vector<size_t>{1, 3, 5, 7, 9}));
+    EXPECT_EQ(p.GetCompressedSegments(), (std::vector<VertexIndex>{1, 3, 5, 7, 9}));
     EXPECT_FALSE(p.IsPolygon());
 }
 
@@ -462,7 +467,7 @@ TEST(SparseVertices, LongerChainMultipleGaps) {
 
 TEST(InputValidation, DuplicateSegmentCausesDegreeViolation) {
     //  0 === 1 --- 2     (=== means duplicate edge; vertex 1 reaches degree 3)
-    const std::vector<size_t> segments = {0, 1, 0, 1, 1, 2};
+    const std::vector<VertexIndex> segments = {0, 1, 0, 1, 1, 2};
     EXPECT_THROW(
         Polyline(PolylineRepresentation::kVerboseSegments, segments), std::invalid_argument
     );
@@ -472,7 +477,7 @@ TEST(InputValidation, SelfLoopSegment) {
     //  ╭─╮
     //  │0│    self-loop: degree 2, endpoint count 0 -> degenerate polygon
     //  ╰─╯
-    const std::vector<size_t> segments = {0, 0};
+    const std::vector<VertexIndex> segments = {0, 0};
     Polyline p(PolylineRepresentation::kVerboseSegments, segments);
     EXPECT_TRUE(p.IsPolygon());
 }
@@ -484,14 +489,14 @@ TEST(InputValidation, SelfLoopSegment) {
 TEST(StaticCompression, SparseIndicesToStatic) {
     // Directly call the static method with sparse vertex indices
     // Polyline: 0—2—4, num_vertices = 5 (indices 0..4, with 1 and 3 unused)
-    const std::vector<size_t> segments = {2, 0, 4, 2};
+    const std::vector<VertexIndex> segments = {2, 0, 4, 2};
     auto ordering = Polyline::GetCompressedVertexOrdering(segments, 5);
-    EXPECT_EQ(ordering, (std::vector<size_t>{0, 2, 4}));
+    EXPECT_EQ(ordering, (std::vector<VertexIndex>{0, 2, 4}));
 }
 
 TEST(StaticCompression, SparsePolygonToStatic) {
     // Triangle 0—2—4—0, num_vertices = 5
-    const std::vector<size_t> segments = {0, 2, 2, 4, 4, 0};
+    const std::vector<VertexIndex> segments = {0, 2, 2, 4, 4, 0};
     auto ordering = Polyline::GetCompressedVertexOrdering(segments, 5);
     EXPECT_EQ(ordering.front(), 0u);
     EXPECT_EQ(ordering.front(), ordering.back());
