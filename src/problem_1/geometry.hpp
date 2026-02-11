@@ -11,8 +11,17 @@ namespace tsexam::problem1 {
 // Point
 //----------------------------------------------
 
+/// A 3D point represented by Cartesian coordinates (x, y, z)
 using Point = std::array<double, 3>;
 
+/**
+ * @brief Hash functor for Point
+ *
+ * Computes a combined hash of the three coordinate values using
+ * a boost-style hash combination technique.
+ *
+ * @note Noexcept allows the compiler and library to optimize more aggressively.
+ */
 struct PointHash {
     std::size_t operator()(const Point& p) const noexcept {
         std::size_t h1 = std::hash<double>{}(p[0]);  // hash x coordinate
@@ -27,6 +36,13 @@ struct PointHash {
     }
 };
 
+/**
+ * @brief Equality functor for Point
+ *
+ * Points are considered equal if all three coordinates compare equal.
+ *
+ * @note Noexcept allows the compiler and library to optimize more aggressively.
+ */
 struct PointEquality {
     bool operator()(const Point& a, const Point& b) const noexcept {
         return a[0] == b[0] && a[1] == b[1] && a[2] == b[2];
@@ -37,14 +53,36 @@ struct PointEquality {
 // Edge
 //----------------------------------------------
 
-/// An edge in canonical form -> first <= second
+/**
+ * @brief An edge represented in canonical form
+ *
+ * The two endpoints are ordered such that the first point is
+ * lexicographically less than or equal to the second.
+ */
 using Edge = std::pair<Point, Point>;
 
-/// Build a canonical edge from two points
+/**
+ * @brief Builds a canonical edge from two points
+ *
+ * The returned edge is ordered such that the smaller point
+ * (lexicographically) appears first.
+ *
+ * @param p First endpoint
+ * @param q Second endpoint
+ * @return Canonicalized edge
+ */
 inline Edge make_edge(const Point& p, const Point& q) {
     return (p < q) ? Edge{p, q} : Edge{q, p};
 }
 
+/**
+ * @brief Hash functor for Edge
+ *
+ * Combines the hashes of the two endpoint points using a
+ * boost-style hash combination technique.
+ *
+ * @note Noexcept allows the compiler and library to optimize more aggressively.
+ */
 struct EdgeHash {
     std::size_t operator()(const Edge& e) const noexcept {
         PointHash point_hash;
@@ -58,6 +96,14 @@ struct EdgeHash {
     }
 };
 
+/**
+ * @brief Equality functor for Edge
+ *
+ * Two edges are equal if both corresponding endpoints compare equal.
+ * Edges are assumed to be in canonical form.
+ *
+ * @note Noexcept allows the compiler and library to optimize more aggressively.
+ */
 struct EdgeEquality {
     bool operator()(const Edge& e1, const Edge& e2) const noexcept {
         PointEquality eq;

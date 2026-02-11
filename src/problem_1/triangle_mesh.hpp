@@ -9,19 +9,59 @@
 
 namespace tsexam::problem1 {
 
-/// Triangle mesh loaded from an STL file
+/**
+ * @brief Triangle mesh loaded from an ASCII STL file
+ *
+ * The mesh stores a collection of triangles and provides functionality to build edge-to-triangle
+ * connectivity information. Edges are treated in canonical form to ensure consistent
+ * adjacency/connectivity mapping.
+ */
 class TriangleMesh {
 public:
+    /**
+     * @brief Constructs an empty triangle mesh
+     */
     TriangleMesh() = default;
 
-    /// Construct a mesh by parsing an ASCII STL file at provided path
+    /**
+     * @brief Constructs a mesh by parsing an ASCII STL file
+     *
+     * The file at the provided path is parsed and all triangles contained in the STL are loaded into
+     * the mesh.
+     *
+     * @param path Path to an ASCII STL file
+     *
+     * @throws std::runtime_error if the file cannot be opened or parsed
+     *
+     * @note Constructor is explicit to avoid implicit conversion from path strings to mesh;
+     *       constructing a mesh does I/O and parsing, so call sites should be explicit.
+     */
     explicit TriangleMesh(const std::string& path);
 
-    /// Build the edge-to-triangle connectivity map
+    /**
+     * @brief Builds the EDGE -> TRIANGLE connectivity map
+     *
+     * For each triangle in the mesh, its three edges are inserted into a connectivity map that
+     * associates each canonical edge with the indices of triangles that share it.
+     *
+     * This function clears and rebuilds the connectivity map based on the current set of triangles.
+     */
     void BuildEdgeConnectivity();
 
+    /**
+     * @brief Returns the list of triangles in the mesh
+     *
+     * @return Reference to the triangle container
+     */
     const std::vector<Triangle>& GetTriangles() const { return triangles_; }
 
+    /**
+     * @brief Returns the edge-to-triangle connectivity map
+     *
+     * Each entry maps a canonical edge to the indices of triangles that share that edge.
+     *
+     * @return Reference to the edge connectivity map
+     */
     const std::unordered_map<Edge, std::vector<std::size_t>, EdgeHash, EdgeEquality>&
     GetEdgeConnectivity() const {
         return edge_connectivity_;
@@ -31,7 +71,7 @@ private:
     /// List of triangles in the mesh
     std::vector<Triangle> triangles_;
 
-    /// Maps each (canonical) edge to the indices of triangles that share it
+    /// Maps each canonical edge to the indices of triangles that share it
     std::unordered_map<Edge, std::vector<std::size_t>, EdgeHash, EdgeEquality> edge_connectivity_;
 };
 
