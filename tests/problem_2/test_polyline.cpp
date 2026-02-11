@@ -283,7 +283,7 @@ TEST(PartB_Roundtrip, ClosedPolygon) {
 //----------------------------------------------------------------------------------
 // Part (A+B): GetType() consistency
 //----------------------------------------------------------------------------------
-// Verify that GetType() agrees with IsPolygon() for every construction path.
+// Verify that GetType() agrees with IsPolygon() for every construction path
 
 TEST(TypeConsistency, OpenPolylineType) {
     const std::vector<VertexIndex> segments = {0, 1, 1, 2};
@@ -501,4 +501,62 @@ TEST(StaticCompression, SparsePolygonToStatic) {
     EXPECT_EQ(ordering.front(), 0u);
     EXPECT_EQ(ordering.front(), ordering.back());
     EXPECT_EQ(ordering.size(), 4u);
+}
+
+#include <chrono>
+
+//----------------------------------------------------------------------------------
+// Performance / Stress Test — Very Long Polyline
+//----------------------------------------------------------------------------------
+// This test verifies that the compression algorithm scales linearly and
+// can handle very large polylines without pathological slowdowns
+//----------------------------------------------------------------------------------
+
+TEST(Performance, DISABLED_VeryLongOpenPolyline) {
+    constexpr VertexIndex kNumVertices = 200'000;
+
+    // Build a long chain: 0--1--2--...--(N-1)
+    std::vector<VertexIndex> segments;
+    segments.reserve(static_cast<size_t>(2 * (kNumVertices - 1)));
+
+    for (VertexIndex i = 0; i < kNumVertices - 1; ++i) {
+        segments.push_back(i);
+        segments.push_back(i + 1);
+    }
+
+    const auto start = std::chrono::steady_clock::now();
+
+    Polyline p(PolylineRepresentation::kVerboseSegments, segments);
+
+    const auto end = std::chrono::steady_clock::now();
+    const auto elapsed_ms =
+        std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+
+    // Correctness checks
+    const auto& ordering = p.GetCompressedSegments();
+    ASSERT_EQ(ordering.size(), static_cast<size_t>(kNumVertices));
+    EXPECT_EQ(ordering.front(), 0);
+    EXPECT_EQ(ordering.back(), kNumVertices - 1);
+    EXPECT_FALSE(p.IsPolygon());
+
+    // Performance sanity check
+    // On a typical dev machine, this should complete in well under 100 ms
+    EXPECT_LT(elapsed_ms, 100) << "Polyline compression took too long: " << elapsed_ms << " ms";
+}
+
+TEST(Performance, DISABLED_WorstCasePermutation) {
+    constexpr VertexIndex N = 50'000;
+
+    std::vector<VertexIndex> segments;
+    segments.reserve(static_cast<size_t>(2 * (N - 1)));
+
+    for (VertexIndex i = 0; i < N - 1; ++i) {
+        segments.push_back(i);
+        segments.push_back(i + 1);
+    }
+
+    std::reverse(segments.begin(), segments.end());
+
+    Polyline p(PolylineRepresentation::kVerboseSegments, segments);
+    EXPECT_EQ(p.GetCompressedSegments().size(), static_cast<size_t>(N));
 }
