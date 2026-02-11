@@ -107,7 +107,7 @@ std::vector<VertexIndex> Polyline::GetCompressedVertexOrdering(
 
     const size_t num_segments{segments.size() / 2};
 
-    // Each vertex connects to up to two others; -1 = unconnected
+    // Each vertex connects to up to two others (-1 = unconnected vertex)
     std::vector<std::pair<VertexIndex, VertexIndex>> vertex_connectivity(num_vertices, {-1, -1});
 
     // Assign a neighbor to the first available slot (-1) of a vertex
@@ -116,15 +116,16 @@ std::vector<VertexIndex> Polyline::GetCompressedVertexOrdering(
             vertex_connectivity[static_cast<size_t>(vertex)].first = neighbor;
             return;
         }
+        // first slot is already taken -> use second slot
         vertex_connectivity[static_cast<size_t>(vertex)].second = neighbor;
     };
 
-    // Each segment connects two vertices -> build connectivity pairs
-    for (size_t index = 0; index < num_segments; ++index) {
-        const VertexIndex vertex_1 = segments[2 * index];
-        const VertexIndex vertex_2 = segments[2 * index + 1];
-        assign_neighbor(vertex_1, vertex_2);
-        assign_neighbor(vertex_2, vertex_1);
+    // Each segment connects two vertices -> build connectivity pairs by looping over segments
+    for (size_t i_segment = 0; i_segment < num_segments; ++i_segment) {
+        const VertexIndex vertex_1 = segments[2 * i_segment];
+        const VertexIndex vertex_2 = segments[2 * i_segment + 1];
+        assign_neighbor(vertex_1, vertex_2);  // vertex_2 -- neighbor --> vertex_1
+        assign_neighbor(vertex_2, vertex_1);  // vertex_1 -- neighbor --> vertex_2
     }
 
     //----------------------------------------------
@@ -144,10 +145,10 @@ std::vector<VertexIndex> Polyline::GetCompressedVertexOrdering(
     // Two scenarios possible:
     // Polyline: 2 endpoints (2 vertices w/ degree 1, rest degree 2)
     // Polygon: no endpoints (all vertices w/ degree 2)
-    const bool is_closed = endpoints.empty();
+    const bool is_closed{endpoints.empty()};
     VertexIndex starting_vertex{0};
     if (is_closed) {
-        // Polygon -> start at the smallest participating vertex
+        // Polygon -> start at the smallest participating vertex to satisfy DETERMINISM
         for (size_t vertex = 0; vertex < num_vertices; ++vertex) {
             const VertexIndex v = static_cast<VertexIndex>(vertex);
             if (vertex_connectivity[static_cast<size_t>(v)].first != -1) {
@@ -156,7 +157,8 @@ std::vector<VertexIndex> Polyline::GetCompressedVertexOrdering(
             }
         }
     } else {
-        // Open polyline -> start at the smaller endpoint of the two
+        // Open polyline -> start at the smaller endpoint of the two (no determinism requirement
+        // however)
         starting_vertex = std::min(endpoints[0], endpoints[1]);
     }
 

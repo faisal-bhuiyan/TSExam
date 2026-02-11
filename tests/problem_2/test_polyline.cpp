@@ -513,13 +513,13 @@ TEST(StaticCompression, SparsePolygonToStatic) {
 //----------------------------------------------------------------------------------
 
 TEST(Performance, DISABLED_VeryLongOpenPolyline) {
-    constexpr VertexIndex kNumVertices = 200'000;
+    constexpr VertexIndex num_vertices = 200'000;
 
     // Build a long chain: 0--1--2--...--(N-1)
     std::vector<VertexIndex> segments;
-    segments.reserve(static_cast<size_t>(2 * (kNumVertices - 1)));
+    segments.reserve(static_cast<size_t>(2 * (num_vertices - 1)));
 
-    for (VertexIndex i = 0; i < kNumVertices - 1; ++i) {
+    for (VertexIndex i = 0; i < num_vertices - 1; ++i) {
         segments.push_back(i);
         segments.push_back(i + 1);
     }
@@ -534,29 +534,35 @@ TEST(Performance, DISABLED_VeryLongOpenPolyline) {
 
     // Correctness checks
     const auto& ordering = p.GetCompressedSegments();
-    ASSERT_EQ(ordering.size(), static_cast<size_t>(kNumVertices));
+    ASSERT_EQ(ordering.size(), static_cast<size_t>(num_vertices));
     EXPECT_EQ(ordering.front(), 0);
-    EXPECT_EQ(ordering.back(), kNumVertices - 1);
+    EXPECT_EQ(ordering.back(), num_vertices - 1);
     EXPECT_FALSE(p.IsPolygon());
 
-    // Performance sanity check
+    // Performance sanity check for 200K vertices:
     // On a typical dev machine, this should complete in well under 100 ms
     EXPECT_LT(elapsed_ms, 100) << "Polyline compression took too long: " << elapsed_ms << " ms";
 }
 
 TEST(Performance, DISABLED_WorstCasePermutation) {
-    constexpr VertexIndex N = 50'000;
+    constexpr VertexIndex num_vertices = 50'000;
 
     std::vector<VertexIndex> segments;
-    segments.reserve(static_cast<size_t>(2 * (N - 1)));
+    segments.reserve(static_cast<size_t>(2 * (num_vertices - 1)));
 
-    for (VertexIndex i = 0; i < N - 1; ++i) {
+    for (VertexIndex i = 0; i < num_vertices - 1; ++i) {
         segments.push_back(i);
         segments.push_back(i + 1);
     }
 
+    // Reverse the segments to create a worst-case permutation for determinism algorithm
     std::reverse(segments.begin(), segments.end());
 
+    // Verify that the compressed ordering is correct
     Polyline p(PolylineRepresentation::kVerboseSegments, segments);
-    EXPECT_EQ(p.GetCompressedSegments().size(), static_cast<size_t>(N));
+    const auto& ordering = p.GetCompressedSegments();
+    ASSERT_EQ(ordering.size(), static_cast<size_t>(num_vertices));
+    EXPECT_EQ(ordering.front(), 0);
+    EXPECT_EQ(ordering.back(), num_vertices - 1);
+    EXPECT_FALSE(p.IsPolygon());
 }
