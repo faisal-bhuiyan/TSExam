@@ -108,11 +108,13 @@ std::vector<VertexIndex> Polyline::GetCompressedVertexOrdering(
     const size_t num_segments{segments.size() / 2};
 
     // Each vertex connects to up to two others (-1 = unconnected vertex)
-    std::vector<std::pair<VertexIndex, VertexIndex>> vertex_connectivity(num_vertices, {-1, -1});
+    std::vector<std::pair<VertexIndex, VertexIndex>> vertex_connectivity(
+        num_vertices, {kUnconnectedVertex, kUnconnectedVertex}
+    );
 
     // Assign a neighbor to the first available slot (-1) of a vertex
     auto assign_neighbor = [&vertex_connectivity](VertexIndex vertex, VertexIndex neighbor) {
-        if (vertex_connectivity[static_cast<size_t>(vertex)].first == -1) {
+        if (vertex_connectivity[static_cast<size_t>(vertex)].first == kUnconnectedVertex) {
             vertex_connectivity[static_cast<size_t>(vertex)].first = neighbor;
             return;
         }
@@ -136,8 +138,8 @@ std::vector<VertexIndex> Polyline::GetCompressedVertexOrdering(
     std::vector<VertexIndex> endpoints;
     for (size_t vertex = 0; vertex < num_vertices; ++vertex) {
         const VertexIndex v = static_cast<VertexIndex>(vertex);
-        if (vertex_connectivity[static_cast<size_t>(v)].first != -1 &&
-            vertex_connectivity[static_cast<size_t>(v)].second == -1) {
+        if (vertex_connectivity[static_cast<size_t>(v)].first != kUnconnectedVertex &&
+            vertex_connectivity[static_cast<size_t>(v)].second == kUnconnectedVertex) {
             endpoints.push_back(v);
         }
     }
@@ -148,17 +150,16 @@ std::vector<VertexIndex> Polyline::GetCompressedVertexOrdering(
     const bool is_closed{endpoints.empty()};
     VertexIndex starting_vertex{0};
     if (is_closed) {
-        // Polygon -> start at the smallest participating vertex to satisfy DETERMINISM
+        // POLYGON -> start at the smallest participating vertex (no determinism requirement here)
         for (size_t vertex = 0; vertex < num_vertices; ++vertex) {
             const VertexIndex v = static_cast<VertexIndex>(vertex);
-            if (vertex_connectivity[static_cast<size_t>(v)].first != -1) {
+            if (vertex_connectivity[static_cast<size_t>(v)].first != kUnconnectedVertex) {
                 starting_vertex = v;
                 break;
             }
         }
     } else {
-        // Open polyline -> start at the smaller endpoint of the two (no determinism requirement
-        // however)
+        // POLYLINE -> start at the smaller endpoint of the two (to satisfy DETERMINISM)
         starting_vertex = std::min(endpoints[0], endpoints[1]);
     }
 
@@ -176,14 +177,14 @@ std::vector<VertexIndex> Polyline::GetCompressedVertexOrdering(
     auto next_neighbor =
         [&vertex_connectivity](VertexIndex vertex, VertexIndex already_visited) -> VertexIndex {
         const auto [v1, v2] = vertex_connectivity[static_cast<size_t>(vertex)];
-        if (v1 != -1 && v1 != already_visited) {
+        if (v1 != kUnconnectedVertex && v1 != already_visited) {
             return v1;
         }
-        if (v2 != -1 && v2 != already_visited) {
+        if (v2 != kUnconnectedVertex && v2 != already_visited) {
             return v2;
         }
         // No unvisited neighbors -> end of open polyline
-        return -1;
+        return kUnconnectedVertex;
     };
 
     // First step: just take the first neighbor (determinism for polylines is already guaranteed by
@@ -199,7 +200,7 @@ std::vector<VertexIndex> Polyline::GetCompressedVertexOrdering(
         VertexIndex next_vertex = next_neighbor(current_vertex, previous_vertex);
 
         // Break condition for polyline: reached the other endpoint
-        if (next_vertex == -1) {
+        if (next_vertex == kUnconnectedVertex) {
             break;
         }
 

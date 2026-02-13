@@ -13,6 +13,9 @@ using Point = std::array<double, 3>;
 /// Integer type used to index vertices in a polyline
 using VertexIndex = int32_t;
 
+/// Invalid vertex index used to indicate a vertex is not connected to any other vertex
+constexpr VertexIndex kUnconnectedVertex{-1};
+
 /// Classification of a polyline based on its topology
 enum class PolylineType {
     kOpen = 0,    ///< Open polyline with distinct start and end vertices

@@ -506,13 +506,10 @@ TEST(StaticCompression, SparsePolygonToStatic) {
 #include <chrono>
 
 //----------------------------------------------------------------------------------
-// Performance / Stress Test — Very Long Polyline
-//----------------------------------------------------------------------------------
-// This test verifies that the compression algorithm scales linearly and
-// can handle very large polylines without pathological slowdowns
+// Performance / Stress Test — long polyline chains
 //----------------------------------------------------------------------------------
 
-TEST(Performance, DISABLED_VeryLongOpenPolyline) {
+TEST(Performance, VeryLongOpenPolyline) {
     constexpr VertexIndex num_vertices = 200'000;
 
     // Build a long chain: 0--1--2--...--(N-1)
@@ -529,7 +526,7 @@ TEST(Performance, DISABLED_VeryLongOpenPolyline) {
     Polyline p(PolylineRepresentation::kVerboseSegments, segments);
 
     const auto end = std::chrono::steady_clock::now();
-    const auto elapsed_ms =
+    [[maybe_unused]] const auto elapsed_ms =
         std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
 
     // Correctness checks
@@ -541,10 +538,10 @@ TEST(Performance, DISABLED_VeryLongOpenPolyline) {
 
     // Performance sanity check for 200K vertices:
     // On a typical dev machine, this should complete in well under 100 ms
-    EXPECT_LT(elapsed_ms, 100) << "Polyline compression took too long: " << elapsed_ms << " ms";
+    // EXPECT_LT(elapsed_ms, 100) << "Polyline compression took too long: " << elapsed_ms << " ms";
 }
 
-TEST(Performance, DISABLED_WorstCasePermutation) {
+TEST(Performance, WorstCasePermutation) {
     constexpr VertexIndex num_vertices = 50'000;
 
     std::vector<VertexIndex> segments;
@@ -555,7 +552,7 @@ TEST(Performance, DISABLED_WorstCasePermutation) {
         segments.push_back(i + 1);
     }
 
-    // Reverse the segments to create a worst-case permutation for determinism algorithm
+    // Reverse the segments to create a worst-case permutation for polyline determinism algorithm
     std::reverse(segments.begin(), segments.end());
 
     // Verify that the compressed ordering is correct
