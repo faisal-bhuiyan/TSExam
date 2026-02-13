@@ -1,6 +1,8 @@
 #pragma once
 
+#include <array>
 #include <cstddef>
+#include <cstdint>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -8,6 +10,15 @@
 #include "geometry.hpp"
 
 namespace tsexam::problem1 {
+
+/// Index type for triangles in the mesh (max ~2 billion triangles)
+using TriangleIndex = std::int32_t;
+
+/// Placeholder for boundary triangles (only one triangle shares the edge)
+constexpr TriangleIndex kBoundaryTriangleIndex{static_cast<TriangleIndex>(-1)};
+
+/// Tolerance for floating point comparisons
+constexpr double kTolerance{1e-16};
 
 /**
  * @brief Triangle mesh loaded from an ASCII STL file
@@ -62,7 +73,7 @@ public:
      *
      * @return Reference to the edge connectivity map
      */
-    const std::unordered_map<Edge, std::vector<std::size_t>, EdgeHash, EdgeEquality>&
+    const std::unordered_map<Edge, std::array<TriangleIndex, 2>, EdgeHash, EdgeEquality>&
     GetEdgeConnectivity() const {
         return edge_connectivity_;
     }
@@ -72,7 +83,8 @@ private:
     std::vector<Triangle> triangles_;
 
     /// Maps each canonical edge to the indices of triangles that share it
-    std::unordered_map<Edge, std::vector<std::size_t>, EdgeHash, EdgeEquality> edge_connectivity_;
+    std::unordered_map<Edge, std::array<TriangleIndex, 2>, EdgeHash, EdgeEquality>
+        edge_connectivity_;
 };
 
 }  // namespace tsexam::problem1

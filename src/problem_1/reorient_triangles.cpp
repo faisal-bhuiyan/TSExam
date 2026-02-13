@@ -66,13 +66,15 @@ std::vector<Triangle> reorient_inconsistent_triangles(TriangleMesh& mesh, std::s
 
             // Check if edge is boundary or non-manifold -> skip
             const auto& degree_of_edge{it->second};
-            if (degree_of_edge.size() != 2) {
-                continue;  // boundary or non-manifold edge
+            if (degree_of_edge[1] == kBoundaryTriangleIndex) {
+                continue;  // boundary edge -> skip
             }
 
             // Get neighbor triangle index from degree of edge
             std::size_t neighbor_index{
-                (degree_of_edge[0] == triangle_index) ? degree_of_edge[1] : degree_of_edge[0]
+                (degree_of_edge[0] == static_cast<TriangleIndex>(triangle_index))
+                    ? static_cast<std::size_t>(degree_of_edge[1])
+                    : static_cast<std::size_t>(degree_of_edge[0])
             };
 
             // If neighbor triangle is already visited -> skip
