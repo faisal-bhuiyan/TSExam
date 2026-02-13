@@ -20,7 +20,7 @@ namespace tsexam::problem1 {
  * @param input Input stream containing ASCII STL data
  * @return List of parsed triangles
  */
-std::vector<Triangle> parse_ascii_stl(std::istream& input);
+std::vector<Triangle> parse_ascii_stl(std::istream&);
 
 /**
  * @brief Writes a single triangle to an output stream in ASCII STL format
@@ -31,7 +31,7 @@ std::vector<Triangle> parse_ascii_stl(std::istream& input);
  * @param out Output stream to write to
  * @param triangle Triangle geometry to emit
  */
-void write_triangle_in_ascii_stl(std::ostream& out, const Triangle& triangle);
+void write_triangle_in_ascii_stl(std::ostream&, const Triangle&);
 
 /**
  * @brief Writes a collection of triangles to an output stream in ASCII STL format
@@ -40,11 +40,9 @@ void write_triangle_in_ascii_stl(std::ostream& out, const Triangle& triangle);
  * provided solid name. Each triangle is written as an individual facet.
  *
  * @param out Output stream to write to
- * @param solid_name Name of the STL solid
+ * @param name Name of the STL solid
  * @param triangles Collection of triangles to emit
  */
-void write_ascii_stl(
-    std::ostream& out, std::string_view solid_name, std::span<const Triangle> triangles
-);
+void write_ascii_stl(std::ostream&, std::string_view name, std::span<const Triangle>);
 
 }  // namespace tsexam::problem1

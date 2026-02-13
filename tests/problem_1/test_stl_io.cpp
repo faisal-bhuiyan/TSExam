@@ -46,17 +46,19 @@ TEST(ParseAsciiStl, NoVertexKeywordsReturnsNoTriangles) {
 //---------------------------------------------------------------------------
 
 TEST(ParseAsciiStl, SingleTriangle) {
+    // STL with a single triangle -> returns the single triangle
     const std::string stl = R"(
-solid single
-  facet normal 0 0 1
-    outer loop
-      vertex 0.0 0.0 0.0
-      vertex 1.0 0.0 0.0
-      vertex 0.0 1.0 0.0
-    endloop
-  endfacet
-endsolid single
-)";
+        solid single
+          facet normal 0 0 1
+            outer loop
+              vertex 0.0 0.0 0.0
+              vertex 1.0 0.0 0.0
+              vertex 0.0 1.0 0.0
+            endloop
+          endfacet
+        endsolid single
+    )";
+
     auto triangles = parse(stl);
     ASSERT_EQ(triangles.size(), 1u);
     expect_point_eq(triangles[0].a, {0., 0., 0.});
@@ -69,24 +71,26 @@ endsolid single
 //---------------------------------------------------------------------------
 
 TEST(ParseAsciiStl, TwoTriangles) {
+    // STL with two triangles -> returns the two triangles
     const std::string stl = R"(
-solid two
-  facet normal 0 0 1
-    outer loop
-      vertex 0 0 0
-      vertex 1 0 0
-      vertex 0 1 0
-    endloop
-  endfacet
-  facet normal 0 0 -1
-    outer loop
-      vertex 1 0 0
-      vertex 1 1 0
-      vertex 0 1 0
-    endloop
-  endfacet
-endsolid two
-)";
+        solid two
+          facet normal 0 0 1
+            outer loop
+              vertex 0 0 0
+              vertex 1 0 0
+              vertex 0 1 0
+            endloop
+          endfacet
+          facet normal 0 0 -1
+            outer loop
+              vertex 1 0 0
+              vertex 1 1 0
+              vertex 0 1 0
+            endloop
+          endfacet
+        endsolid two
+    )";
+
     auto triangles = parse(stl);
     ASSERT_EQ(triangles.size(), 2u);
 
@@ -104,17 +108,19 @@ endsolid two
 //---------------------------------------------------------------------------
 
 TEST(ParseAsciiStl, NegativeCoordinates) {
+    // STL with negative coordinates -> returns the triangle with negative coordinates
     const std::string stl = R"(
-solid neg
-  facet normal 0 0 1
-    outer loop
-      vertex -1.5 -2.5 -3.5
-      vertex  4.0  5.0  6.0
-      vertex -7.0  8.0 -9.0
-    endloop
-  endfacet
-endsolid neg
-)";
+        solid neg
+          facet normal 0 0 1
+            outer loop
+              vertex -1.5 -2.5 -3.5
+              vertex  4.0  5.0  6.0
+              vertex -7.0  8.0 -9.0
+            endloop
+          endfacet
+        endsolid neg
+    )";
+
     auto triangles = parse(stl);
     ASSERT_EQ(triangles.size(), 1u);
     expect_point_eq(triangles[0].a, {-1.5, -2.5, -3.5});
@@ -127,17 +133,18 @@ endsolid neg
 //---------------------------------------------------------------------------
 
 TEST(ParseAsciiStl, ScientificNotation) {
+    // STL with scientific notation -> returns the triangle with scientific notation
     const std::string stl = R"(
-solid sci
-  facet normal 0 0 1
-    outer loop
-      vertex 1.5e2 -3.0e-1 0.0e0
-      vertex 1e3 2e-4 3e+1
-      vertex -1.23e+2 4.56e-3 7.89e0
-    endloop
-  endfacet
-endsolid sci
-)";
+        solid sci
+          facet normal 0 0 1
+            outer loop
+              vertex 1.5e2 -3.0e-1 0.0e0
+              vertex 1e3 2e-4 3e+1
+              vertex -1.23e+2 4.56e-3 7.89e0
+            endloop
+          endfacet
+        endsolid sci
+    )";
     auto triangles = parse(stl);
     ASSERT_EQ(triangles.size(), 1u);
     expect_point_eq(triangles[0].a, {150., -0.3, 0.});
@@ -150,7 +157,7 @@ endsolid sci
 //---------------------------------------------------------------------------
 
 TEST(ParseAsciiStl, ExtraWhitespaceAndTabs) {
-    // Tabs, extra spaces, blank lines — parser should handle all whitespace uniformly
+    // STL with tabs, extra spaces, blank lines -> returns the triangle with the whitespace
     const std::string stl =
         "solid ws\n"
         "\n"
@@ -176,7 +183,7 @@ TEST(ParseAsciiStl, ExtraWhitespaceAndTabs) {
 //---------------------------------------------------------------------------
 
 TEST(ParseAsciiStl, MinimalVertexOnlyInput) {
-    // The parser only cares about "vertex" tokens; everything else is ignored
+    // STL with minimal vertex only input -> returns the triangle with the minimal vertex only input
     const std::string stl =
         "vertex 0 0 0\n"
         "vertex 1 0 0\n"
@@ -194,17 +201,18 @@ TEST(ParseAsciiStl, MinimalVertexOnlyInput) {
 //---------------------------------------------------------------------------
 
 TEST(ParseAsciiStl, IncompleteTriangleIsDropped) {
-    // Only two vertices — not enough to form a triangle
+    // STL with incomplete triangle -> drops the incomplete triangle
     const std::string stl = R"(
-solid incomplete
-  facet normal 0 0 1
-    outer loop
-      vertex 1 2 3
-      vertex 4 5 6
-    endloop
-  endfacet
-endsolid incomplete
-)";
+        solid incomplete
+          facet normal 0 0 1
+            outer loop
+              vertex 1 2 3
+              vertex 4 5 6
+            endloop
+          endfacet
+        endsolid incomplete
+    )";
+
     auto triangles = parse(stl);
     EXPECT_TRUE(triangles.empty());
 }
@@ -214,23 +222,25 @@ endsolid incomplete
 //---------------------------------------------------------------------------
 
 TEST(ParseAsciiStl, CompleteTriangleFollowedByIncomplete) {
+    // STL with complete triangle followed by incomplete triangle -> returns the complete triangle
     const std::string stl = R"(
-solid mixed
-  facet normal 0 0 1
-    outer loop
-      vertex 0 0 0
-      vertex 1 0 0
-      vertex 0 1 0
-    endloop
-  endfacet
-  facet normal 0 0 1
-    outer loop
-      vertex 2 2 2
-      vertex 3 3 3
-    endloop
-  endfacet
-endsolid mixed
-)";
+        solid mixed
+          facet normal 0 0 1
+            outer loop
+              vertex 0 0 0
+              vertex 1 0 0
+              vertex 0 1 0
+            endloop
+          endfacet
+          facet normal 0 0 1
+            outer loop
+              vertex 2 2 2
+              vertex 3 3 3
+            endloop
+          endfacet
+        endsolid mixed
+    )";
+
     auto triangles = parse(stl);
     ASSERT_EQ(triangles.size(), 1u);
     expect_point_eq(triangles[0].a, {0, 0, 0});
@@ -241,17 +251,19 @@ endsolid mixed
 //---------------------------------------------------------------------------
 
 TEST(ParseAsciiStl, LargeCoordinateValues) {
+    // STL with large coordinate values -> returns the triangle with large coordinate values
     const std::string stl = R"(
-solid large
-  facet normal 0 0 1
-    outer loop
-      vertex 999999.999 -999999.999 0.000001
-      vertex 123456789.0 0.0 0.0
-      vertex 0.0 987654321.0 0.0
-    endloop
-  endfacet
-endsolid large
-)";
+        solid large
+          facet normal 0 0 1
+            outer loop
+              vertex 999999.999 -999999.999 0.000001
+              vertex 123456789.0 0.0 0.0
+              vertex 0.0 987654321.0 0.0
+            endloop
+          endfacet
+        endsolid large
+    )";
+
     auto triangles = parse(stl);
     ASSERT_EQ(triangles.size(), 1u);
     expect_point_eq(triangles[0].a, {999999.999, -999999.999, 0.000001});
@@ -264,17 +276,19 @@ endsolid large
 //---------------------------------------------------------------------------
 
 TEST(ParseAsciiStl, IntegerCoordinates) {
+    // STL with integer coordinates -> returns the triangle with integer coordinates
     const std::string stl = R"(
-solid ints
-  facet normal 0 0 1
-    outer loop
-      vertex 1 2 3
-      vertex 4 5 6
-      vertex 7 8 9
-    endloop
-  endfacet
-endsolid ints
-)";
+        solid ints
+          facet normal 0 0 1
+            outer loop
+              vertex 1 2 3
+              vertex 4 5 6
+              vertex 7 8 9
+            endloop
+          endfacet
+        endsolid ints
+    )";
+
     auto triangles = parse(stl);
     ASSERT_EQ(triangles.size(), 1u);
     expect_point_eq(triangles[0].a, {1, 2, 3});
@@ -287,6 +301,7 @@ endsolid ints
 //---------------------------------------------------------------------------
 
 TEST(WriteAsciiStl, SingleTriangleRoundTrip) {
+    // STL with a single triangle -> returns the single triangle
     Triangle t{{0, 0, 0}, {1, 0, 0}, {0, 1, 0}};
 
     std::ostringstream out;
@@ -300,6 +315,7 @@ TEST(WriteAsciiStl, SingleTriangleRoundTrip) {
 }
 
 TEST(WriteAsciiStl, MultipleTrianglesRoundTrip) {
+    // STL with multiple triangles -> returns the multiple triangles
     std::vector<Triangle> tris{
         {{0, 0, 0}, {1, 0, 0}, {0, 1, 0}},
         {{1, 0, 0}, {1, 1, 0}, {0, 1, 0}},
@@ -313,6 +329,7 @@ TEST(WriteAsciiStl, MultipleTrianglesRoundTrip) {
 }
 
 TEST(WriteAsciiStl, DegenerateTriangleZeroArea) {
+    // STL with degenerate triangle -> returns the degenerate triangle
     Triangle t{{1, 1, 1}, {1, 1, 1}, {1, 1, 1}};
 
     std::ostringstream out;
@@ -323,6 +340,8 @@ TEST(WriteAsciiStl, DegenerateTriangleZeroArea) {
 }
 
 TEST(WriteAsciiStl, NegativeAndLargeCoordinates) {
+    // STL with negative and large coordinates -> returns the triangle with negative and large
+    // coordinates
     Triangle t{{-1e6, 2.5, -3.5}, {4., -5e5, 6.}, {7., 8., -9e4}};
 
     std::ostringstream out;
@@ -333,6 +352,7 @@ TEST(WriteAsciiStl, NegativeAndLargeCoordinates) {
 }
 
 TEST(WriteAsciiStl, EmptyTriangleList) {
+    // STL with empty triangle list -> returns the empty triangle list
     std::ostringstream out;
     write_ascii_stl(out, "empty", {});
 
@@ -340,6 +360,7 @@ TEST(WriteAsciiStl, EmptyTriangleList) {
 }
 
 TEST(WriteAsciiStl, DeterministicOutput) {
+    // STL with deterministic output -> returns the deterministic output
     Triangle t{{0, 0, 0}, {1, 0, 0}, {0, 1, 0}};
 
     std::ostringstream out1, out2;

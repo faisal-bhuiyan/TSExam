@@ -53,11 +53,10 @@ public:
      * @brief Builds the EDGE -> TRIANGLE connectivity map
      *
      * For each triangle in the mesh, its three edges are inserted into a connectivity map that
-     * associates each canonical edge with the indices of triangles that share it.
-     *
-     * This function clears and rebuilds the connectivity map based on the current set of triangles.
+     * associates each canonical edge with the indices of triangles that share it. A manifold mesh
+     * is guaranteed to have a maximum of 2 triangles sharing each edge.
      */
-    void BuildEdgeConnectivity();
+    void BuildEdgeToTriangleConnectivity();
 
     /**
      * @brief Returns the list of triangles in the mesh

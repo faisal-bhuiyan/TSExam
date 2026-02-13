@@ -52,11 +52,11 @@ TriangleMesh::TriangleMesh(const std::string& path) {
         }
     }
 
-    // Build connectivity first to check manifold assumptions
-    this->BuildEdgeConnectivity();
+    // Build connectivity and validate manifold assumptions
+    this->BuildEdgeToTriangleConnectivity();
 }
 
-void TriangleMesh::BuildEdgeConnectivity() {
+void TriangleMesh::BuildEdgeToTriangleConnectivity() {
     this->edge_connectivity_.clear();
     this->edge_connectivity_.reserve(3 * this->triangles_.size());
 
@@ -84,16 +84,18 @@ void TriangleMesh::BuildEdgeConnectivity() {
             // above insertion failed -> edge is already in the connectivity map
             // we need to check if the edge is shared by 3 or more triangles
             if (!inserted) {
-                // Check for non-manifold edges (shared by 3 or more triangles) -> throw
-                // Logic: if the second triangle index is not the invalid triangle index, then the
-                // edge is shared by 3 or more triangles
+                // Check for NON-MANIFOLD edges (shared by 3 or more triangles) -> throw
+                // Logic: if the second connection slot is NOT the boundary triangle index (i.e. we
+                // cannot insert the current triangle index into the second position), then the edge
+                // must be shared by 3 or more triangles
                 if (it->second[1] != kBoundaryTriangleIndex) {
                     throw std::invalid_argument(
                         "non-manifold mesh detected: edge shared by more than 2 triangles"
                     );
                 }
                 // Edge is already in the connectivity map -> add current triangle index to second
-                // position -- at this point, the edge degree is 2 i.e. shared by 2 triangles
+                // position -- at this point, the edge degree is 2 i.e. shared by 2 triangles -- next
+                // insertion attempt will throw
                 it->second[1] = static_cast<TriangleIndex>(i);
             }
         }
