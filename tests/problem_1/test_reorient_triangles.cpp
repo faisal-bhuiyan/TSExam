@@ -4,6 +4,12 @@
 #include <stdexcept>
 #include <string>
 
+#if defined(_WIN32)
+#include <windows.h>
+#else
+#include <unistd.h>
+#endif
+
 #include <gtest/gtest.h>
 
 #include "problem_1/geometry.hpp"
@@ -33,9 +39,15 @@ static void expect_point_eq(const Point& actual, const Point& expected) {
     EXPECT_DOUBLE_EQ(actual[2], expected[2]);
 }
 
-/// Build a TriangleMesh from in-memory STL content (writes to a temp file)
+/// Build a TriangleMesh from in-memory STL content (writes to a temp file).
+/// Uses a process-unique filename so parallel test runs do not overwrite the same file.
 static TriangleMesh make_mesh_from_stl(const std::string& stl_content) {
-    const std::string path = "reorient_test.stl";
+#if defined(_WIN32)
+    const unsigned long long pid = GetCurrentProcessId();
+#else
+    const unsigned long long pid = static_cast<unsigned long long>(getpid());
+#endif
+    const std::string path = "reorient_test_" + std::to_string(pid) + ".stl";
     std::ofstream f(path);
     if (!f) {
         throw std::runtime_error("failed to open " + path + " for writing");
