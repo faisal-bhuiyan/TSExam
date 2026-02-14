@@ -31,8 +31,9 @@ static const char* kVoidTestStlPath = "void_detection_test.stl";
 
 static TriangleMesh make_mesh_from_stl(const std::string& stl_content) {
     std::ofstream f(kVoidTestStlPath);
-    if (!f)
+    if (!f) {
         throw std::runtime_error("failed to open " + std::string(kVoidTestStlPath) + " for writing");
+    }
     f << stl_content;
     f.close();
     return TriangleMesh(kVoidTestStlPath);
@@ -380,7 +381,7 @@ static std::string make_outer_cube_inner_tetrahedron_stl() {
     // Tetrahedron: base z=0.5, apex (1,1,1.5). Vertices (0.5,0.5,0.5), (1.5,0.5,0.5), (1,1.5,0.5),
     // (1,1,1.5)
     s += R"(
-            facet normal 0 0 -1
+          facet normal 0 0 -1
             outer loop
               vertex 0.5 0.5 0.5
               vertex 1 1.5 0.5
@@ -417,8 +418,8 @@ static std::string make_outer_cube_inner_tetrahedron_stl() {
 static std::string make_outer_cube_inner_pyramid_stl() {
     std::string s;
     s += R"(
-solid outer_cube_inner_pyramid
-)";
+        solid outer_cube_inner_pyramid
+    )";
     auto emit_cube = [&s](double x0, double y0, double z0, double x1, double y1, double z1) {
         s += "  facet normal 0 0 -1\n    outer loop\n      vertex " + std::to_string(x0) + " " +
              std::to_string(y0) + " " + std::to_string(z0) + "\n      vertex " + std::to_string(x1) +
@@ -527,7 +528,7 @@ solid outer_cube_inner_pyramid
               vertex 1 1 1.5
             endloop
           endfacet
-    endsolid outer_cube_inner_pyramid
+        endsolid outer_cube_inner_pyramid
     )";
     return s;
 }
@@ -914,13 +915,20 @@ TEST(VoidDetection, GeometryWithVoidsBinaryStlDetectsVoids) {
     }
     auto t6 = std::chrono::steady_clock::now();
 
-    using Ms = std::chrono::duration<double, std::milli>;
-    std::cout << "[VoidDetection] \nconvert_binary_to_ascii_ms="
-              << std::chrono::duration_cast<Ms>(t1 - t0).count()
-              << "\nmesh_construct_ms=" << std::chrono::duration_cast<Ms>(t2 - t1).count()
-              << "\nfind_connected_components_ms=" << std::chrono::duration_cast<Ms>(t3 - t2).count()
-              << "\nfilter_closed_ms=" << std::chrono::duration_cast<Ms>(t4 - t3).count()
-              << "\nidentify_voids_ms=" << std::chrono::duration_cast<Ms>(t5 - t4).count()
-              << "\nexport_voids_to_stl_ms=" << std::chrono::duration_cast<Ms>(t6 - t5).count()
-              << "\ntotal_ms=" << std::chrono::duration_cast<Ms>(t6 - t0).count() << "\n";
+    using milliseconds = std::chrono::duration<double, std::milli>;
+    std::cout << "[VoidDetection] Timing (ms)\n"
+              << "  Convert binary STL to ASCII:  "
+              << std::chrono::duration_cast<milliseconds>(t1 - t0).count() << " ms\n"
+              << "  Build triangle mesh:          "
+              << std::chrono::duration_cast<milliseconds>(t2 - t1).count() << " ms\n"
+              << "  Find connected components:     "
+              << std::chrono::duration_cast<milliseconds>(t3 - t2).count() << " ms\n"
+              << "  Filter closed components:      "
+              << std::chrono::duration_cast<milliseconds>(t4 - t3).count() << " ms\n"
+              << "  Identify voids:                 "
+              << std::chrono::duration_cast<milliseconds>(t5 - t4).count() << " ms\n"
+              << "  Export voids to STL:           "
+              << std::chrono::duration_cast<milliseconds>(t6 - t5).count() << " ms\n"
+              << "  Total:                         "
+              << std::chrono::duration_cast<milliseconds>(t6 - t0).count() << " ms\n";
 }
