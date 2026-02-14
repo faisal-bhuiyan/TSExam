@@ -17,6 +17,7 @@ add_library(mesh
     src/problem_1/stl_io.cpp
     src/problem_1/triangle_mesh.cpp
     src/problem_1/reorient_triangles.cpp
+    src/problem_1/void_detection.cpp
 )
 target_include_directories(mesh PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_compile_options(mesh PRIVATE ${PROJECT_WARNINGS})
@@ -48,7 +49,9 @@ include(GoogleTest)
 add_executable(problem1_tests
     tests/problem_1/test_stl_io.cpp
     tests/problem_1/test_geometry.cpp
+    tests/problem_1/test_triangle_mesh.cpp
     tests/problem_1/test_reorient_triangles.cpp
+    tests/problem_1/test_void_detection.cpp
 )
 target_include_directories(problem1_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_link_libraries(problem1_tests PRIVATE mesh gtest_main)

@@ -119,8 +119,8 @@ static std::string make_stl_strip_facets_at_y(std::size_t num_quads, double y_of
     return stl.str();
 }
 
-/// Build STL string for an NxM grid of triangles, all inconsistently oriented.
-/// Stacked strips so every shared edge has the same direction in both triangles.
+/// Build STL string for an NxM grid of triangles, all inconsistently oriented
+/// Stacked strips so every shared edge has the same direction in both triangles
 static std::string make_stl_grid_inconsistent(std::size_t nrows, std::size_t ncols) {
     std::ostringstream stl;
     stl << "solid grid_inconsistent\n";
@@ -146,7 +146,7 @@ TEST(FlipTriangle, SwapsBAndC) {
 TEST(FlipTriangle, Idempotent) {
     Triangle t{{0., 0., 0.}, {1., 0., 0.}, {0., 1., 0.}};
     flip_triangle(t);
-    flip_triangle(t);
+    flip_triangle(t);  // idempotent operation
     expect_point_eq(t.a, {0., 0., 0.});
     expect_point_eq(t.b, {1., 0., 0.});
     expect_point_eq(t.c, {0., 1., 0.});
@@ -157,26 +157,29 @@ TEST(FlipTriangle, Idempotent) {
 //---------------------------------------------------------------------------
 
 TEST(HasDirectedEdge, DetectsDirectedEdgesAB_BC_CA) {
+    // directed edge from a to b, b to c, c to a
     Point a{0., 0., 0.}, b{1., 0., 0.}, c{0., 1., 0.};
     Triangle t{a, b, c};
-    EXPECT_TRUE(has_directed_edge(t, a, b));
-    EXPECT_TRUE(has_directed_edge(t, b, c));
-    EXPECT_TRUE(has_directed_edge(t, c, a));
+    EXPECT_TRUE(has_directed_edge(t, a, b));  // contains directed edge from a to b
+    EXPECT_TRUE(has_directed_edge(t, b, c));  // contains directed edge from b to c
+    EXPECT_TRUE(has_directed_edge(t, c, a));  // contains directed edge from c to a
 }
 
 TEST(HasDirectedEdge, RejectsReverseDirection) {
+    // directed edge from a to b, b to c, c to a
     Point a{0., 0., 0.}, b{1., 0., 0.}, c{0., 1., 0.};
     Triangle t{a, b, c};
-    EXPECT_FALSE(has_directed_edge(t, b, a));
-    EXPECT_FALSE(has_directed_edge(t, c, b));
-    EXPECT_FALSE(has_directed_edge(t, a, c));
+    EXPECT_FALSE(has_directed_edge(t, b, a));  // does not traverse in correct order
+    EXPECT_FALSE(has_directed_edge(t, c, b));  // does not traverse in correct order
+    EXPECT_FALSE(has_directed_edge(t, a, c));  // does not traverse in correct order
 }
 
 TEST(HasDirectedEdge, RejectsNonEdge) {
+    // directed edge from a to b, b to c, c to a
     Point a{0., 0., 0.}, b{1., 0., 0.}, c{0., 1., 0.};
     Triangle t{a, b, c};
     Point d{2., 0., 0.};
-    EXPECT_FALSE(has_directed_edge(t, a, d));
+    EXPECT_FALSE(has_directed_edge(t, a, d));  // d is not a vertex of the triangle
 }
 
 //---------------------------------------------------------------------------
@@ -188,7 +191,7 @@ TEST(AreOrientationsConsistent, OppositeDirectionIsConsistent) {
     Triangle t1{p, q, r};  // edge (p,q)
     Triangle t2{q, p, r};  // edge (q,p) -> opposite
     Edge e = make_edge(p, q);
-    EXPECT_TRUE(are_orientations_consistent(t1, t2, e));
+    EXPECT_TRUE(are_orientations_consistent(t1, t2, e));  // orientations are consistent
 }
 
 TEST(AreOrientationsConsistent, SameDirectionIsInconsistent) {
@@ -196,7 +199,7 @@ TEST(AreOrientationsConsistent, SameDirectionIsInconsistent) {
     Triangle t1{p, q, r1};  // edge (p,q)
     Triangle t2{p, q, r2};  // edge (p,q) same direction
     Edge e = make_edge(p, q);
-    EXPECT_FALSE(are_orientations_consistent(t1, t2, e));
+    EXPECT_FALSE(are_orientations_consistent(t1, t2, e));  // orientations are NOT consistent
 }
 
 //---------------------------------------------------------------------------
@@ -204,122 +207,138 @@ TEST(AreOrientationsConsistent, SameDirectionIsInconsistent) {
 //---------------------------------------------------------------------------
 
 TEST(ReorientInconsistentTriangles, SeedOutOfRangeReturnsEmpty) {
+    // seed is out of range -> no triangles to reorient
     const std::string stl = R"(
-solid one
-  facet normal 0 0 1
-    outer loop
-      vertex 0 0 0
-      vertex 1 0 0
-      vertex 0 1 0
-    endloop
-  endfacet
-endsolid one
-)";
-    TriangleMesh mesh = make_mesh_from_stl(stl);
-    auto flipped = reorient_inconsistent_triangles(mesh, 1);
-    EXPECT_TRUE(flipped.empty());
+        solid one
+          facet normal 0 0 1
+            outer loop
+              vertex 0 0 0
+              vertex 1 0 0
+              vertex 0 1 0
+            endloop
+          endfacet
+        endsolid one
+    )";
+
+    TriangleMesh mesh = make_mesh_from_stl(stl);              // single triangle
+    auto flipped = reorient_inconsistent_triangles(mesh, 1);  // seed is out of range
+    EXPECT_TRUE(flipped.empty());                             // no triangles to reorient
 }
 
 TEST(ReorientInconsistentTriangles, SingleTriangleReturnsEmpty) {
+    // single triangle -> no triangles to reorient
     const std::string stl = R"(
-solid one
-  facet normal 0 0 1
-    outer loop
-      vertex 0 0 0
-      vertex 1 0 0
-      vertex 0 1 0
-    endloop
-  endfacet
-endsolid one
-)";
+        solid one
+          facet normal 0 0 1
+            outer loop
+              vertex 0 0 0
+              vertex 1 0 0
+              vertex 0 1 0
+            endloop
+          endfacet
+        endsolid one
+    )";
+
     TriangleMesh mesh = make_mesh_from_stl(stl);
-    auto flipped = reorient_inconsistent_triangles(mesh, 0);
-    EXPECT_TRUE(flipped.empty());
+    auto flipped = reorient_inconsistent_triangles(mesh, 0);  // seed is 0
+    EXPECT_TRUE(flipped.empty());                             // no triangles to reorient
 }
 
 TEST(ReorientInconsistentTriangles, TwoTrianglesConsistentReturnsEmpty) {
     // Two triangles sharing edge (0,0,0)-(1,0,0), opposite orientation
     const std::string stl = R"(
-solid two_consistent
-  facet normal 0 0 1
-    outer loop
-      vertex 0 0 0
-      vertex 1 0 0
-      vertex 0 1 0
-    endloop
-  endfacet
-  facet normal 0 0 -1
-    outer loop
-      vertex 0 0 0
-      vertex 0 1 0
-      vertex 1 0 0
-    endloop
-  endfacet
-endsolid two_consistent
-)";
-    TriangleMesh mesh = make_mesh_from_stl(stl);
-    auto flipped = reorient_inconsistent_triangles(mesh, 0);
-    EXPECT_TRUE(flipped.empty());
+        solid two_consistent
+          facet normal 0 0 1
+            outer loop
+              vertex 0 0 0
+              vertex 1 0 0
+              vertex 0 1 0
+            endloop
+          endfacet
+          facet normal 0 0 -1
+            outer loop
+              vertex 0 0 0
+              vertex 0 1 0
+              vertex 1 0 0
+            endloop
+          endfacet
+        endsolid two_consistent
+    )";
+
+    TriangleMesh mesh =
+        make_mesh_from_stl(stl);  // two triangles sharing edge (0,0,0)-(1,0,0), opposite orientation
+    auto flipped = reorient_inconsistent_triangles(mesh, 0);  // seed is 0
+    EXPECT_TRUE(flipped.empty());                             // no triangles to reorient
 }
 
 TEST(ReorientInconsistentTriangles, TwoTrianglesInconsistentReturnsOneFlipped) {
     // Two triangles sharing edge (0,0,0)-(1,0,0), same orientation -> neighbor flipped
     const std::string stl = R"(
-solid two_inconsistent
-  facet normal 0 0 1
-    outer loop
-      vertex 0 0 0
-      vertex 1 0 0
-      vertex 0 1 0
-    endloop
-  endfacet
-  facet normal 0 0 1
-    outer loop
-      vertex 0 0 0
-      vertex 1 0 0
-      vertex 1 1 0
-    endloop
-  endfacet
-endsolid two_inconsistent
-)";
-    TriangleMesh mesh = make_mesh_from_stl(stl);
-    auto flipped = reorient_inconsistent_triangles(mesh, 0);
-    ASSERT_EQ(flipped.size(), 1u);
+        solid two_inconsistent
+          facet normal 0 0 1
+            outer loop
+              vertex 0 0 0
+              vertex 1 0 0
+              vertex 0 1 0
+            endloop
+          endfacet
+          facet normal 0 0 1
+            outer loop
+              vertex 0 0 0
+              vertex 1 0 0
+              vertex 1 1 0
+            endloop
+          endfacet
+        endsolid two_inconsistent
+    )";
+
+    TriangleMesh mesh =
+        make_mesh_from_stl(stl);  // two triangles sharing edge (0,0,0)-(1,0,0), same orientation
+    auto flipped = reorient_inconsistent_triangles(mesh, 0);  // seed is 0
+    ASSERT_EQ(flipped.size(), 1u);                            // one triangle flipped
+
     // Neighbor (index 1) had vertices (0,0,0), (1,0,0), (1,1,0). Flipped -> (0,0,0), (1,1,0),
-    // (1,0,0).
+    // (1,0,0)
     expect_point_eq(flipped[0].a, {0., 0., 0.});
     expect_point_eq(flipped[0].b, {1., 1., 0.});
     expect_point_eq(flipped[0].c, {1., 0., 0.});
 }
 
 TEST(ReorientInconsistentTriangles, MeshUnchangedAfterCall) {
+    // two triangles sharing edge (0,0,0)-(1,0,0), same orientation -> neighbor flipped
     const std::string stl = R"(
-solid two_inconsistent
-  facet normal 0 0 1
-    outer loop
-      vertex 0 0 0
-      vertex 1 0 0
-      vertex 0 1 0
-    endloop
-  endfacet
-  facet normal 0 0 1
-    outer loop
-      vertex 0 0 0
-      vertex 1 0 0
-      vertex 1 1 0
-    endloop
-  endfacet
-endsolid two_inconsistent
-)";
-    TriangleMesh mesh = make_mesh_from_stl(stl);
+        solid two_inconsistent
+          facet normal 0 0 1
+            outer loop
+              vertex 0 0 0
+              vertex 1 0 0
+              vertex 0 1 0
+            endloop
+          endfacet
+          facet normal 0 0 1
+            outer loop
+              vertex 0 0 0
+              vertex 1 0 0
+              vertex 1 1 0
+            endloop
+          endfacet
+        endsolid two_inconsistent
+    )";
+
+    TriangleMesh mesh =
+        make_mesh_from_stl(stl);  // two triangles sharing edge (0,0,0)-(1,0,0), same orientation
     const auto& before = mesh.GetTriangles();
-    (void)reorient_inconsistent_triangles(mesh, 0);
+    (void)reorient_inconsistent_triangles(mesh, 0);  // seed is 0
     const auto& after = mesh.GetTriangles();
-    ASSERT_EQ(before.size(), after.size());
+    ASSERT_EQ(
+        before.size(), after.size()
+    );  // same number of triangles before and after reorientation
+
+    // same vertices before and after reorientation
     for (std::size_t i = 0; i < before.size(); ++i) {
-        expect_point_eq(after[i].a, before[i].a);
-        expect_point_eq(after[i].b, before[i].b);
-        expect_point_eq(after[i].c, before[i].c);
+        expect_point_eq(after[i].a, before[i].a);  // same vertices
+        expect_point_eq(after[i].b, before[i].b);  // same vertices
+        expect_point_eq(after[i].c, before[i].c);  // same vertices
     }
 }
 
@@ -328,24 +347,27 @@ endsolid two_inconsistent
 //---------------------------------------------------------------------------
 
 TEST(ExportInconsistentTriangles, WritesValidStlToStreamAndReadsItBack) {
+    // two triangles sharing edge (0,0,0)-(1,0,0), same orientation -> neighbor flipped
     const std::string stl = R"(
-solid two_inconsistent
-  facet normal 0 0 1
-    outer loop
-      vertex 0 0 0
-      vertex 1 0 0
-      vertex 0 1 0
-    endloop
-  endfacet
-  facet normal 0 0 1
-    outer loop
-      vertex 0 0 0
-      vertex 1 0 0
-      vertex 1 1 0
-    endloop
-  endfacet
-endsolid two_inconsistent
-)";
+        solid two_inconsistent
+          facet normal 0 0 1
+            outer loop
+              vertex 0 0 0
+              vertex 1 0 0
+              vertex 0 1 0
+            endloop
+          endfacet
+          facet normal 0 0 1
+            outer loop
+              vertex 0 0 0
+              vertex 1 0 0
+              vertex 1 1 0
+            endloop
+          endfacet
+        endsolid two_inconsistent
+    )";
+
+    // Export inconsistent triangles to stream and read them back
     TriangleMesh mesh = make_mesh_from_stl(stl);
     std::ostringstream out;
     export_inconsistent_triangles(mesh, 0, out);
@@ -354,6 +376,7 @@ endsolid two_inconsistent
     EXPECT_TRUE(s.find("endsolid") != std::string::npos);
     EXPECT_TRUE(s.find("vertex") != std::string::npos);
 
+    // Import inconsistent triangles from stream and check them
     std::istringstream in(s);
     auto triangles = parse_ascii_stl(in);
 
@@ -370,7 +393,7 @@ endsolid two_inconsistent
 //---------------------------------------------------------------------------
 
 TEST(Stress, LargeConsistentGrid_ReturnsEmpty) {
-    // Grid of 50x40 = 2000 cells -> 4000 triangles; all consistent
+    // Grid of 50x40 = 2000 cells -> 4000 triangles; all consistent -> no triangles to reorient
     const std::size_t rows = 50;
     const std::size_t cols = 40;
     std::string stl = make_stl_grid_consistent(rows, cols);
