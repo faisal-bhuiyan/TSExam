@@ -1,12 +1,12 @@
 # TSExam
 
-C++20 / CMake project: Problem 1 (triangle mesh, STL I/O, void detection) and Problem 2 (polyline).
+C++20 / CMake project: Problem 1 (void detection and triangle re-orientation in STL mesh) and Problem 2 (polyline storage in compressed format and open/closed polyline detection).
 
 ## Prerequisites
 
 - CMake 3.14+
 - C++20 compiler (GCC 10+, Clang 10+, or MSVC 2019+)
-- Git (used by CMake FetchContent for Google Test)
+- Git
 
 ## Build
 
@@ -39,4 +39,3 @@ On Windows: `build\Debug\problem1_tests.exe` and `build\Debug\problem2_tests.exe
 
 - `src/problem_1/`, `src/problem_2/` — libraries (`mesh`, `polyline`)
 - `tests/problem_1/`, `tests/problem_2/` — test sources
-- Google Test is fetched automatically via CMake FetchContent.
