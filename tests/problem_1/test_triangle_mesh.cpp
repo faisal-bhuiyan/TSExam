@@ -204,8 +204,7 @@ TEST(TriangleMeshGetTriangles, ReturnsParsedTriangles) {
 TEST(TriangleMeshEdgeConnectivity, SingleTriangleAllEdgesBoundary) {
     // STL with a single triangle -> all edges are boundary edges
 
-    /*
-     * Geometry (top view, z = 0):
+    /** Geometry (top view, z = 0):
      *
      *          (0,1)
      *           ●
@@ -266,24 +265,25 @@ TEST(TriangleMeshEdgeConnectivity, SingleTriangleAllEdgesBoundary) {
 TEST(TriangleMeshEdgeConnectivity, TwoTrianglesSharedEdgeHasTwoIndices) {
     // STL with two triangles sharing an edge -> edge has two indices
 
-    // Geometry (top view, z = 0):
-    //
-    //   (0,1) ●──────● (1,1)
-    //         │    / │
-    //         │  T1  │
-    //         │ /    │
-    //   (0,0) ●──────● (1,0)
-    //
-    // Triangles:
-    //   T0: (0,0,0) -> (1,0,0) -> (0,1,0)
-    //   T1: (1,0,0) -> (1,1,0) -> (0,1,0)
-    //
-    // Shared edge:
-    //   (1,0,0) <-> (0,1,0)
-    //
-    // Expectation:
-    //   The shared edge appears in the edge connectivity map
-    //   with two triangle indices (0 and 1).
+    /* Geometry (top view, z = 0):
+     *
+     *   (0,1) ●──────● (1,1)
+     *         │    / │
+     *         │T0/T1 │
+     *         │ /    │
+     *   (0,0) ●──────● (1,0)
+     *
+     * Triangles:
+     *   T0: (0,0,0) -> (1,0,0) -> (0,1,0)
+     *   T1: (1,0,0) -> (1,1,0) -> (0,1,0)
+     *
+     * Shared edge:
+     *   (1,0,0) <-> (0,1,0)
+     *
+     * Expectation:
+     *   The shared edge appears in the edge connectivity map
+     *   with two triangle indices (0 and 1).
+     */
 
     const std::string stl = R"(
         solid two
@@ -324,30 +324,31 @@ TEST(TriangleMeshEdgeConnectivity, TwoTrianglesSharedEdgeHasTwoIndices) {
 TEST(TriangleMeshEdgeConnectivity, TwoTrianglesBoundaryEdgesHaveBoundaryIndex) {
     // STL with two triangles sharing a boundary edge -> edge has two indices
 
-    // Geometry (top view, z = 0):
-    //
-    //   (0,1) ●──────● (1,1)
-    //         │    / │
-    //         │  T1  │
-    //         │ /    │
-    //   (0,0) ●──────● (1,0)
-    //
-    // Triangles:
-    //   T0: (0,0,0) -> (1,0,0) -> (0,1,0)
-    //   T1: (1,0,0) -> (1,1,0) -> (0,1,0)
-    //
-    // Shared edge (interior):
-    //   (1,0,0) <-> (0,1,0)   -> two triangle indices
-    //
-    // Boundary edges (appear in only one triangle):
-    //   T0 boundary: (0,0,0) <-> (1,0,0)
-    //   T0 boundary: (0,0,0) <-> (0,1,0)
-    //   T1 boundary: (1,0,0) <-> (1,1,0)
-    //   T1 boundary: (1,1,0) <-> (0,1,0)
-    //
-    // Expectation:
-    //   For a boundary edge like (0,0,0) <-> (1,0,0),
-    //   adjacency = { triangle_index, kBoundaryTriangleIndex }.
+    /* Geometry (top view, z = 0):
+     *
+     *   (0,1) ●──────● (1,1)
+     *         │    / │
+     *          T0/T1 │
+     *         │ /    │
+     *   (0,0) ●──────● (1,0)
+     *
+     * Triangles:
+     *   T0: (0,0,0) -> (1,0,0) -> (0,1,0)
+     *   T1: (1,0,0) -> (1,1,0) -> (0,1,0)
+     *
+     * Shared edge (interior):
+     *   (1,0,0) <-> (0,1,0)   -> two triangle indices
+     *
+     * Boundary edges (appear in only one triangle):
+     *   T0 boundary: (0,0,0) <-> (1,0,0)
+     *   T0 boundary: (0,0,0) <-> (0,1,0)
+     *   T1 boundary: (1,0,0) <-> (1,1,0)
+     *   T1 boundary: (1,1,0) <-> (0,1,0)
+     *
+     * Expectation:
+     *   For a boundary edge like (0,0,0) <-> (1,0,0),
+     *   adjacency = { triangle_index, kBoundaryTriangleIndex }.
+     */
 
     const std::string stl = R"(
         solid two

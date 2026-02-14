@@ -1,3 +1,4 @@
+#include <iostream>
 #include <stdexcept>
 #include <vector>
 
@@ -526,8 +527,9 @@ TEST(Performance, VeryLongOpenPolyline) {
     Polyline p(PolylineRepresentation::kVerboseSegments, segments);
 
     const auto end = std::chrono::steady_clock::now();
-    [[maybe_unused]] const auto elapsed_ms =
+    const auto elapsed_ms =
         std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    std::cout << "[Performance.VeryLongOpenPolyline] elapsed_ms=" << elapsed_ms << "\n";
 
     // Correctness checks
     const auto& ordering = p.GetCompressedSegments();
@@ -535,10 +537,6 @@ TEST(Performance, VeryLongOpenPolyline) {
     EXPECT_EQ(ordering.front(), 0);
     EXPECT_EQ(ordering.back(), num_vertices - 1);
     EXPECT_FALSE(p.IsPolygon());
-
-    // Performance sanity check for 200K vertices:
-    // On a typical dev machine, this should complete in well under 100 ms
-    // EXPECT_LT(elapsed_ms, 100) << "Polyline compression took too long: " << elapsed_ms << " ms";
 }
 
 TEST(Performance, WorstCasePermutation) {

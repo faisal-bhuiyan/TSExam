@@ -359,7 +359,40 @@ TEST(ReorientInconsistentTriangles, MeshUnchangedAfterCall) {
 //---------------------------------------------------------------------------
 
 TEST(ExportInconsistentTriangles, WritesValidStlToStreamAndReadsItBack) {
-    // two triangles sharing edge (0,0,0)-(1,0,0), same orientation -> neighbor flipped
+    // two triangles T0 and T1 sharing edge (1,0,0)-(0,1,0): inconsistent orientation -> flip T1
+
+    /** Geometry (top view, z = 0):
+     *
+     *   (0,1) ●────────● (1,1)
+     *         │  \  T1 │
+     *         │   \  * │
+     *         │    \   │
+     *         │     \  │
+     *         │ T0   \ │
+     *   (0,0) ●───────● (1,0)
+     *          shared edge
+     *
+     * Triangles (initial orientation):
+     *   T0: (0,0,0) -> (1,0,0) -> (0,1,0)      [seed triangle]
+     *   T1: (1,0,0) -> (0,1,0) -> (1,1,0)      [* inconsistent triangle]
+     *
+     * Shared edge:
+     *   (1,0,0) <-> (0,1,0)
+     *
+     * Issue:
+     *   Both triangles traverse the shared edge in the SAME direction, making T1
+     *   orientation inconsistent with respect to the seed T0
+     *
+     * Export behavior:
+     *   export_inconsistent_triangles(mesh, 0, ...)
+     *   selects and flips the inconsistent neighbor (T1 *), then writes ONLY that triangle to the
+     *   output STL
+     *
+     * Expectation:
+     *   The exported STL contains exactly one triangle (T1), with vertex order flipped to restore
+     *   consistent orientation
+     */
+
     const std::string stl = R"(
         solid two_inconsistent
           facet normal 0 0 1
@@ -371,8 +404,8 @@ TEST(ExportInconsistentTriangles, WritesValidStlToStreamAndReadsItBack) {
           endfacet
           facet normal 0 0 1
             outer loop
-              vertex 0 0 0
               vertex 1 0 0
+              vertex 0 1 0
               vertex 1 1 0
             endloop
           endfacet
@@ -393,19 +426,43 @@ TEST(ExportInconsistentTriangles, WritesValidStlToStreamAndReadsItBack) {
     auto triangles = parse_ascii_stl(in);
 
     ASSERT_EQ(triangles.size(), 1u);
-    // Neighbor (index 1) had vertices (0,0,0), (1,0,0), (1,1,0)
-    // Flipped -> (0,0,0), (1,1,0), (1,0,0)
-    expect_point_eq(triangles[0].a, {0., 0., 0.});
+    // Neighbor (index 1) had vertices (1,0,0), (0,1,0), (1,1,0)
+    // Flipped -> (1,0,0), (1,1,0), (0,1,0)
+    expect_point_eq(triangles[0].a, {1., 0., 0.});
     expect_point_eq(triangles[0].b, {1., 1., 0.});
-    expect_point_eq(triangles[0].c, {1., 0., 0.});
+    expect_point_eq(triangles[0].c, {0., 1., 0.});
 }
 
 //---------------------------------------------------------------------------
 // Stress tests — time and space
 //---------------------------------------------------------------------------
 
-TEST(Stress, LargeConsistentGrid_ReturnsEmpty) {
+TEST(ReorientTrianglePerformanceTest, LargeConsistentGrid_ReturnsEmpty) {
     // Grid of 50x40 = 2000 cells -> 4000 triangles; all consistent -> no triangles to reorient
+
+    /*
+     * STL grid schematic (top view, z = 0):
+     *
+     *   y=2  ●──────●──────●
+     *        │\     │\     │
+     *        │ \    │ \    │
+     *   y=1  ●──────●──────●
+     *        │\     │\     │
+     *        │ \    │ \    │
+     *   y=0  ●──────●──────●
+     *        x=0    x=1    x=2
+     *
+     * Each cell [i,j] is split into two triangles with consistent winding:
+     *
+     *   T0: (x0,y0,0) -> (x1,y0,0) -> (x0,y1,0)
+     *   T1: (x1,y0,0) -> (x1,y1,0) -> (x0,y1,0)
+     *
+     * All triangles traverse shared edges in opposite directions,
+     * producing a globally consistent, manifold mesh.
+     *
+     * The grid contains 2 * nrows * ncols triangles
+     */
+
     const std::size_t rows = 50;
     const std::size_t cols = 40;
     std::string stl = make_stl_grid_consistent(rows, cols);
@@ -416,8 +473,32 @@ TEST(Stress, LargeConsistentGrid_ReturnsEmpty) {
     EXPECT_TRUE(flipped.empty());
 }
 
-TEST(Stress, LargeInconsistentGrid_ReturnsAllButSeed) {
+TEST(ReorientTrianglePerformanceTest, LargeInconsistentGrid_ReturnsAllButSeed) {
     // Grid of 50x40 = 2000 cells -> 4000 triangles; all inconsistent (stacked strips)
+
+    /*
+     * STL grid schematic (top view, z = 0):
+     *
+     *   y=2  ●──────●──────●
+     *        │\     │\     │
+     *        │ \    │ \    │
+     *   y=1  ●──────●──────●
+     *        │\     │\     │
+     *        │ \    │ \    │
+     *   y=0  ●──────●──────●
+     *        x=0    x=1    x=2
+     *
+     * Each cell [i,j] is split into two triangles with inconsistent winding:
+     *
+     *   T0: (x0,y0,0) -> (x1,y0,0) -> (x0,y1,0)
+     *   T1: (x1,y0,0) -> (x1,y1,0) -> (x0,y1,0)
+     *
+     * All triangles traverse shared edges in same direction,
+     * producing a globally in inconsistent, manifold mesh.
+     *
+     * The grid contains 2 * nrows * ncols triangles
+     */
+
     const std::size_t rows = 50;
     const std::size_t cols = 40;
     std::string stl = make_stl_grid_inconsistent(rows, cols);
@@ -435,8 +516,31 @@ TEST(Stress, LargeInconsistentGrid_ReturnsAllButSeed) {
     }
 }
 
-TEST(Stress, LongStripAllInconsistent_ReturnsAllButSeed) {
-    // Strip of 500 quads -> 1000 triangles; each pair inconsistent
+TEST(ReorientTrianglePerformanceTest, LongStripAllInconsistent_ReturnsAllButSeed) {
+    // Strip of 500 quads -> 1000 triangles; each pair
+
+    /*
+     * STL strip schematic (top view, z = 0):
+     *
+     *   y=1  ●──────●──────●──────●
+     *        │\  *  │\  *  │\  *  │
+     *        │ \    │ \    │ \    │
+     *   y=0  ●──────●──────●──────●
+     *        x=0    x=1    x=2    x=3
+     *
+     * Each quad [k, k+1] is split into two triangles:
+     *
+     *   T0: (x0,0,0) -> (x1,0,0) -> (x0,1,0)
+     *   T1: (x1,0,0) -> (x0,1,0) -> (x1,1,0)   *
+     *
+     * The two triangles in each quad traverse their shared edge
+     * (x0,0,0) <-> (x1,0,0) in the SAME direction, making T1 (*)
+     * orientation inconsistent with respect to T0.
+     *
+     * Repeating this pattern produces a strip of 2 * num_quads triangles
+     * with a consistent local inconsistency in every triangle
+     */
+
     const std::size_t num_quads = 500;
     std::string stl = make_stl_strip_inconsistent(num_quads);
     TriangleMesh mesh = make_mesh_from_stl(stl);
@@ -453,8 +557,31 @@ TEST(Stress, LongStripAllInconsistent_ReturnsAllButSeed) {
     }
 }
 
-TEST(Stress, TwoDisconnectedComponents_OnlySeedComponentProcessed) {
-    // Two strips: first 3 quads (6 tri), second 2 quads (4 tri). Disconnected.
+TEST(ReorientTrianglePerformanceTest, TwoDisconnectedComponents_OnlySeedComponentProcessed) {
+    // Two strips: first 3 quads (6 triangles), second 2 quads (4 triangles). Disconnected.
+
+    /*
+     * STL strip schematic (top view, z = 0):
+     *
+     *   y=1  ●──────●──────●──────●
+     *        │\  *  │\  *  │\  *  │
+     *        │ \    │ \    │ \    │
+     *   y=0  ●──────●──────●──────●
+     *        x=0    x=1    x=2    x=3
+     *
+     * Each quad [k, k+1] is split into two triangles:
+     *
+     *   T0: (x0,0,0) -> (x1,0,0) -> (x0,1,0)
+     *   T1: (x1,0,0) -> (x0,1,0) -> (x1,1,0)   *
+     *
+     * The two triangles in each quad traverse their shared edge
+     * (x0,0,0) <-> (x1,0,0) in the SAME direction, making T1 (*)
+     * orientation inconsistent with respect to T0.
+     *
+     * Repeating this pattern produces a strip of 2 * num_quads triangles
+     * with a consistent local inconsistency in every triangle
+     */
+
     std::string stl1 = make_stl_strip_inconsistent(3);
     std::string stl2 = make_stl_strip_inconsistent(2);
 
@@ -473,7 +600,8 @@ TEST(Stress, TwoDisconnectedComponents_OnlySeedComponentProcessed) {
     combined << "endsolid two\n";
     TriangleMesh mesh = make_mesh_from_stl(combined.str());
 
-    // Seed 0 in first component (6 triangles). Second component has 4 triangles, unreachable.
+    // Seed 0 in first component (6 triangles)
+    // second component has 4 triangles, unreachable from seed
     auto flipped = reorient_inconsistent_triangles(mesh, 0);
 
     // First component: 6 triangles, 5 flipped (all but seed)
@@ -487,18 +615,46 @@ TEST(Stress, TwoDisconnectedComponents_OnlySeedComponentProcessed) {
     }
 }
 
-TEST(Stress, FiveDisconnectedComponents_OnlySeedComponentProcessed) {
-    // 5 strips at y = 0, 10, 20, 30, 40. Sizes: 2, 2, 100, 2, 2 quads (4, 4, 200, 4, 4 triangles).
-    // Seed in the large one (third component); only its 199 flipped triangles are returned.
+TEST(ReorientTrianglePerformanceTest, FiveDisconnectedComponents_OnlySeedComponentProcessed) {
+    /**
+     * 5 strips at y = 0, 10, 20, 30, 40. Sizes: 2, 2, 100, 2, 2 quads (4, 4, 200, 4, 4 triangles)
+     *
+     * Seed in the large one (third component); only its 199 flipped triangles are returned
+     */
+
+    /*
+     * STL strip schematic (top view, z = 0):
+     *
+     *   y=1  ●──────●──────●──────●
+     *        │\  *  │\  *  │\  *  │
+     *        │ \    │ \    │ \    │
+     *   y=0  ●──────●──────●──────●
+     *        x=0    x=1    x=2    x=3
+     *
+     * Each quad [k, k+1] is split into two triangles:
+     *
+     *   T0: (x0,0,0) -> (x1,0,0) -> (x0,1,0)
+     *   T1: (x1,0,0) -> (x0,1,0) -> (x1,1,0)   *
+     *
+     * The two triangles in each quad traverse their shared edge
+     * (x0,0,0) <-> (x1,0,0) in the SAME direction, making T1 (*)
+     * orientation inconsistent with respect to T0.
+     *
+     * Repeating this pattern produces a strip of 2 * num_quads triangles
+     * with a consistent local inconsistency in every triangle
+     */
+
     const std::size_t small_quads = 2;
     const std::size_t large_quads = 100;
     std::ostringstream combined;
     combined << "solid five\n";
-    combined << make_stl_strip_facets_at_y(small_quads, 0.0);   // 4 tri
-    combined << make_stl_strip_facets_at_y(small_quads, 10.0);  // 4 tri
-    combined << make_stl_strip_facets_at_y(large_quads, 20.0);  // 200 tri (seed component)
-    combined << make_stl_strip_facets_at_y(small_quads, 30.0);  // 4 tri
-    combined << make_stl_strip_facets_at_y(small_quads, 40.0);  // 4 tri
+    combined << make_stl_strip_facets_at_y(small_quads, 0.);   // 4 triangles
+    combined << make_stl_strip_facets_at_y(small_quads, 10.);  // 4 triangles
+    combined << make_stl_strip_facets_at_y(
+        large_quads, 20.
+    );  // 200 triangles (contains seed triangle)
+    combined << make_stl_strip_facets_at_y(small_quads, 30.);  // 4 triangles
+    combined << make_stl_strip_facets_at_y(small_quads, 40.);  // 4 triangles
     combined << "endsolid five\n";
 
     TriangleMesh mesh = make_mesh_from_stl(combined.str());

@@ -148,7 +148,9 @@ TEST(EdgeHash, SymmetricUnderEndpointPermutation) {
 
     EdgeHash hash;
 
-    EXPECT_EQ(hash(make_edge(a, b)), hash(make_edge(b, a)));
+    EXPECT_EQ(
+        hash(make_edge(a, b)), hash(make_edge(b, a))
+    );  // hash of edge a -> b should be equal to hash of edge b -> a
 }
 
 //---------------------------------------------------------------------------
@@ -161,13 +163,13 @@ TEST(EdgeHash, WorksInUnorderedMap) {
     Point p{0., 0., 0.};
     Point q{1., 0., 0.};
 
-    Edge e1 = make_edge(p, q);
-    Edge e2 = make_edge(q, p);
+    Edge e1 = make_edge(p, q);  // add edge p -> q
+    Edge e2 = make_edge(q, p);  // add edge q -> p
 
-    map[e1] = 42;
+    map[e1] = 42;  // assign value 42 for edge p -> q
 
-    EXPECT_EQ(map.size(), 1u);
-    EXPECT_EQ(map[e2], 42);
+    EXPECT_EQ(map.size(), 1u);  // map should contain only one edge: p-> q
+    EXPECT_EQ(map[e2], 42);     // value for edge q -> p should be 42
 }
 
 TEST(EdgeHash, UnorderedMapOverwriteDoesNotCreateDuplicates) {
@@ -176,11 +178,11 @@ TEST(EdgeHash, UnorderedMapOverwriteDoesNotCreateDuplicates) {
     Point a{0., 0., 0.};
     Point b{1., 0., 0.};
 
-    map[make_edge(a, b)] = 1;
-    map[make_edge(b, a)] = 2;
+    map[make_edge(a, b)] = 1;  // add edge (a, b) with value 1
+    map[make_edge(b, a)] = 2;  // add edge (b, a) with value 2
 
-    EXPECT_EQ(map.size(), 1u);
-    EXPECT_EQ(map.begin()->second, 2);
+    EXPECT_EQ(map.size(), 1u);          // map should contain only one edge : a -> b
+    EXPECT_EQ(map.begin()->second, 2);  // value should be 2 for edge
 }
 
 //---------------------------------------------------------------------------
@@ -202,7 +204,7 @@ TEST(Triangle, VerticesAreIndependentCopies) {
 
     Triangle t{a, b, c};
 
-    a[0] = 42.;  // mutate original
+    a[0] = 42.;  // mutate original point
 
-    EXPECT_EQ(t.a, (Point{0., 0., 0.}));
+    EXPECT_EQ(t.a, (Point{0., 0., 0.}));  // triangle vertex is independent of original point
 }
