@@ -1,3 +1,6 @@
+#include <cstdint>
+#include <cstring>
+#include <fstream>
 #include <sstream>
 #include <string>
 
@@ -5,6 +8,7 @@
 
 #include "problem_1/stl_io.hpp"
 
+using tsexam::problem1::convert_binary_stl_to_ascii;
 using tsexam::problem1::parse_ascii_stl;
 using tsexam::problem1::Point;
 using tsexam::problem1::Triangle;
@@ -368,4 +372,93 @@ TEST(WriteAsciiStl, DeterministicOutput) {
     write_ascii_stl(out2, "det", std::span<const Triangle>{&t, 1});
 
     EXPECT_EQ(out1.str(), out2.str());
+}
+
+//---------------------------------------------------------------------------
+// Convert binary STL to ASCII
+//---------------------------------------------------------------------------
+
+/// Write a minimal binary STL file (80-byte header + little-endian uint32_t count + triangles)
+/// Each triangle: 12 bytes normal (3 float), 36 bytes vertices (9 float), 2 bytes attribute
+static void write_minimal_binary_stl(
+    const std::string& path, std::uint32_t num_triangles,
+    const float*
+        vertices_per_triangle  // 9 floats per triangle (v0x,v0y,v0z, v1x,v1y,v1z, v2x,v2y,v2z)
+) {
+    std::ofstream out(path, std::ios::binary);
+    ASSERT_TRUE(out) << "failed to open " << path;
+    char header[80] = {};
+    out.write(header, 80);
+    out.write(reinterpret_cast<const char*>(&num_triangles), sizeof(num_triangles));
+    float normal[3] = {0.f, 0.f, 1.f};
+    std::uint16_t attr = 0;
+    for (std::uint32_t i = 0; i < num_triangles; ++i) {
+        out.write(reinterpret_cast<const char*>(normal), sizeof(normal));
+        out.write(reinterpret_cast<const char*>(vertices_per_triangle + i * 9), 9 * sizeof(float));
+        out.write(reinterpret_cast<const char*>(&attr), sizeof(attr));
+    }
+}
+
+TEST(ConvertBinaryStlToAscii, NonexistentBinaryPathThrows) {
+    EXPECT_THROW(
+        convert_binary_stl_to_ascii("nonexistent_binary.stl", "out.stl"), std::runtime_error
+    );
+}
+
+TEST(ConvertBinaryStlToAscii, ZeroTrianglesProducesValidAscii) {
+    const std::string binary_path = "binary_zero_triangles.stl";
+    const std::string ascii_path = "ascii_zero_triangles.stl";
+    write_minimal_binary_stl(binary_path, 0u, nullptr);
+
+    // Convert binary STL to ASCII
+    convert_binary_stl_to_ascii(binary_path, ascii_path);
+    std::ifstream in(ascii_path);
+    auto triangles = parse_ascii_stl(in);
+    EXPECT_TRUE(triangles.empty());
+}
+
+TEST(ConvertBinaryStlToAscii, OneTriangleRoundTrip) {
+    const std::string binary_path = "binary_one_triangle.stl";
+    const std::string ascii_path = "ascii_one_triangle.stl";
+    const float verts[9] = {
+        0.f, 0.f, 0.f,  // triangle 0, vertex 0
+        1.f, 0.f, 0.f,  // triangle 0, vertex 1
+        0.f, 1.f, 0.f,  // triangle 0, vertex 2
+    };
+    write_minimal_binary_stl(binary_path, 1u, verts);
+
+    // Convert binary STL to ASCII
+    convert_binary_stl_to_ascii(binary_path, ascii_path);
+    std::ifstream in(ascii_path);
+    auto triangles = parse_ascii_stl(in);
+    ASSERT_EQ(triangles.size(), 1u);
+    expect_point_eq(triangles[0].a, {0., 0., 0.});
+    expect_point_eq(triangles[0].b, {1., 0., 0.});
+    expect_point_eq(triangles[0].c, {0., 1., 0.});
+}
+
+TEST(ConvertBinaryStlToAscii, TwoTrianglesRoundTrip) {
+    const std::string binary_path = "binary_two_triangles.stl";
+    const std::string ascii_path = "ascii_two_triangles.stl";
+    const float verts[18] = {
+        0.f, 0.f, 0.f,  // triangle 0, vertex 0
+        1.f, 0.f, 0.f,  // triangle 0, vertex 1
+        0.f, 1.f, 0.f,  // triangle 0, vertex 2
+        0.f, 0.f, 1.f,  // triangle 1, vertex 0
+        0.f, 1.f, 1.f,  // triangle 1, vertex 1
+        1.f, 0.f, 1.f,  // triangle 1, vertex 2
+    };
+    write_minimal_binary_stl(binary_path, 2u, verts);
+
+    // Convert binary STL to ASCII
+    convert_binary_stl_to_ascii(binary_path, ascii_path);
+    std::ifstream in(ascii_path);
+    auto triangles = parse_ascii_stl(in);
+    ASSERT_EQ(triangles.size(), 2u);
+    expect_point_eq(triangles[0].a, {0., 0., 0.});
+    expect_point_eq(triangles[0].b, {1., 0., 0.});
+    expect_point_eq(triangles[0].c, {0., 1., 0.});
+    expect_point_eq(triangles[1].a, {0., 0., 1.});
+    expect_point_eq(triangles[1].b, {0., 1., 1.});
+    expect_point_eq(triangles[1].c, {1., 0., 1.});
 }

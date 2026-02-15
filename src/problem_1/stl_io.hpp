@@ -44,4 +44,14 @@ void write_triangle_in_ascii_stl(std::ostream&, const Triangle&);
  */
 void write_ascii_stl(std::ostream&, std::string_view name, std::span<const Triangle>);
 
+/**
+ * @brief Converts a binary STL file to an ASCII STL file
+ *
+ * This function converts a binary STL file to an ASCII STL file.
+ *
+ * @param binary_path Path to the binary STL file
+ * @param ascii_path Path to the ASCII STL file
+ */
+void convert_binary_stl_to_ascii(const std::string& binary_path, const std::string& ascii_path);
+
 }  // namespace tsexam::problem1
