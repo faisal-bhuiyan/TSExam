@@ -4,7 +4,7 @@
 
 This problem involves storing the segments of a polyline in a more compact form and detecting whether the line is open or closed. This was the first problem I solved for this exam and is probably the easiest problem of the bunch. Solving graph traversal problems was something new for me; however, it was a fun problem to work through and set me up nicely to solve problem 1.
 
-While this problem could reasonably be solved in a couple hours, I spent several hours on it to showcase my production code development style and workflow. I am a big believer in readable and maintainable code, with plenty of tests to provide coverage and act as code-based user documentation. I also took the time to add doxygen-style comments to the source (header files) as well as detailed comments in the implementation files to communicate intent and provide guidance for understanding more complex parts of the algorithm.
+While this problem could reasonably be solved in a couple hours, I spent 4-5 hours on it to showcase my production code development style and workflow. I am a big believer in well-designed architecture, clean, readable, and maintainable code, with plenty of tests to provide coverage and act as code-based user documentation. I also took the time to add doxygen-style comments to the source (header) files as well as detailed comments in the implementation files to communicate intent and provide guidance for understanding more complex parts of the algorithm.
 
 ## Approach
 
@@ -12,18 +12,19 @@ While this problem could reasonably be solved in a couple hours, I spent several
 
 - **High-level plan:**
   The design strays slightly from the instructions in that I did not implement standalone functions to perform the conversions. Instead, I designed a `Polyline` class that establishes the invariants and assumptions for the data, performs the compression once in the constructor, and stores the result as a class attribute. This approach keeps the representation consistent and avoids repeated work. Several helper functions and enums were added to provide a clean and complete deliverable for the problem.
+
     - Perform the conversion from verbose line segments in the constructor of the `Polyline` class and store the polyline internally using the compressed representation. This way, the conversion is done once and the compressed form can be reused whenever the polyline is needed.
-    - The algorithm builds edge connectivity from the segment list in a single pass, then performs a single walk along the chain to produce the compressed ordering. This is a linear-time algorithm with complexity \(O(n)\).
+    - The algorithm builds edge connectivity from the segment list in a single pass, then performs a single walk along the chain to produce the compressed ordering. This is a linear-time algorithm with complexity $O(n)$.
     - See the handwritten notes for further details on the data structures and algorithm design decisions (attached as a PDF).
 
 - **Input formats:**
   Two representations of polylines are supported by the `Polyline` class:
-    - Verbose segments (a flat list of 2N vertex index pairs)
-    - Compressed vertex ordering (explicit traversal order)
+    - Verbose segments (a flat list of 2N vertex index pairs).
+    - Compressed vertex ordering (explicit traversal order).
   The constructor validates the input and either converts via `GetCompressedVertexOrdering` or stores the compressed data directly.
 
 - **Assumptions:**
-  The assumptions are provided in the exam; I am not assuming anything beyond those:
+  The assumptions are provided in the exam instructions; I am not assuming anything beyond those:
     - The input describes a single connected polyline (open chain) or polygon (closed chain).
     - Every vertex has at most two segments attached: exactly zero degree-1 vertices for polygons and exactly two degree-1 vertices for open polylines.
     - Non-contiguous vertex indices (gaps) are allowed; degree is computed only over participating vertices.
@@ -34,8 +35,8 @@ While this problem could reasonably be solved in a couple hours, I spent several
     - For closed polylines, start at the smallest participating vertex and walk by selecting the neighbor that is not equal to the previous vertex until returning to the start.
 
 - **Complexity / trade-offs:**
-    - \(O(\text{segments})\) to build connectivity and validate input.
-    - \(O(\text{vertices})\) for the degree array and traversal.
+    - $O(segments)$ to build connectivity and validate input.
+    - $O(vertices)$ for the degree array and traversal.
     - Validation is not optimized for large inputs but prioritizes robustness and clear invariants for the hot path.
 
 
@@ -121,19 +122,19 @@ More detailed reasoning, intermediate sketches, and design exploration for this 
 
 ## AI Disclosure
 
-I used AI tools throughout the development of this solution as a productivity aid, mainly to speed up planning and test development. AI was not used to make design decisions or replace code review, but rather to help with well‑scoped, fine‑grained tasks where it could save time.
+I used AI tools throughout the development of this solution as a productivity aid, mainly to speed up planning and test development. AI was not used to make design decisions or "vibe-code", but rather to help with well‑scoped, fine‑grained tasks where it could save time. I would describe it as "AI-assisted engineering" where I crafted a robust, readable, well-tested software faster with help from AI and hopefully it is pretty evident from the code.
 
 - **AI tools used:**
   - I primarily used the Cursor editor with Auto mode enabled (likely backed by the Composer 1.5 model).
   - Most interactions were done in “Ask” mode rather than relying on agentic code generation. Not that there is anything wrong with that.
 
 - **How AI was used:**
-  - Early on, I used AI to help reason through the problem statement and clarify requirements.
+  - Early on, I used AI (Gemini and ChatGPT) to help reason through the problem statement and clarify requirements.
   - During implementation, AI was most useful for scaling up test coverage, especially for edge cases and large‑input stress tests.
   - In a few cases, I used AI to generate initial drafts of small, self‑contained code snippets (mostly test scaffolding), which I then refined manually.
 
 - **Prompts and queries:**
-  - I used many short, targeted prompts throughout development, making it impractical to list them all.
+  - I used many short, targeted prompts throughout development, making it impractical to list them all. I will make an attempt to list them as appendix.
   - Typical prompts were very specific and task‑oriented, for example:
     - “Implement a polyline test with 200K segments and provide reasonable assertions.”
 
