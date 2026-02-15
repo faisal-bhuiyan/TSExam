@@ -17,10 +17,10 @@ using Point = std::array<double, 3>;
 /**
  * @brief Hash functor for Point
  *
- * Computes a combined hash of the three coordinate values using
- * a boost-style hash combination technique.
+ * Computes a combined hash of the three coordinate values using a boost-style hash combination
+ * technique.
  *
- * @note Noexcept allows the compiler and library to optimize more aggressively.
+ * @note `noexcept` allows the compiler and library to optimize more aggressively.
  */
 struct PointHash {
     std::size_t operator()(const Point& p) const noexcept {
@@ -41,7 +41,7 @@ struct PointHash {
  *
  * Points are considered equal if all three coordinates compare equal.
  *
- * @note Noexcept allows the compiler and library to optimize more aggressively.
+ * @note `noexcept` allows the compiler and library to optimize more aggressively.
  */
 struct PointEquality {
     bool operator()(const Point& a, const Point& b) const noexcept {
@@ -56,16 +56,16 @@ struct PointEquality {
 /**
  * @brief An edge represented in canonical form
  *
- * The two endpoints are ordered such that the first point is
- * lexicographically less than or equal to the second.
+ * The two endpoints are ordered such that the first point is lexicographically less than or equal to
+ * the second. Lexicographic ordering means that the x-coordinate is the primary key, followed by the
+ * y-coordinate, and then the z-coordinate.
  */
 using Edge = std::pair<Point, Point>;
 
 /**
  * @brief Builds a canonical edge from two points
  *
- * The returned edge is ordered such that the smaller point
- * (lexicographically) appears first.
+ * The returned edge is ordered such that the smaller point (lexicographically) appears first.
  *
  * @param p First endpoint
  * @param q Second endpoint
@@ -78,10 +78,9 @@ inline Edge make_edge(const Point& p, const Point& q) {
 /**
  * @brief Hash functor for Edge
  *
- * Combines the hashes of the two endpoint points using a
- * boost-style hash combination technique.
+ * Combines the hashes of the two endpoint points using a boost-style hash combination technique.
  *
- * @note Noexcept allows the compiler and library to optimize more aggressively.
+ * @note `noexcept` allows the compiler and library to optimize more aggressively.
  */
 struct EdgeHash {
     std::size_t operator()(const Edge& e) const noexcept {
@@ -99,10 +98,10 @@ struct EdgeHash {
 /**
  * @brief Equality functor for Edge
  *
- * Two edges are equal if both corresponding endpoints compare equal.
- * Edges are assumed to be in canonical form.
+ * Two edges are equal if both corresponding endpoints compare equal. Edges are assumed to be in
+ * canonical form.
  *
- * @note Noexcept allows the compiler and library to optimize more aggressively.
+ * @note `noexcept` allows the compiler and library to optimize more aggressively.
  */
 struct EdgeEquality {
     bool operator()(const Edge& e1, const Edge& e2) const noexcept {
