@@ -363,14 +363,14 @@ TEST(ExportInconsistentTriangles, WritesValidStlToStreamAndReadsItBack) {
 
     /** Geometry (top view, z = 0):
      *
-     *   (0,1) ●────────● (1,1)
+     *   (0,1) ●--------● (1,1)
+     *         │ \      │
      *         │  \  T1 │
      *         │   \  * │
      *         │    \   │
      *         │     \  │
      *         │ T0   \ │
-     *   (0,0) ●───────● (1,0)
-     *          shared edge
+     *   (0,0) ●--------● (1,0)
      *
      * Triangles (initial orientation):
      *   T0: (0,0,0) -> (1,0,0) -> (0,1,0)      [seed triangle]
@@ -443,14 +443,22 @@ TEST(ReorientTrianglePerformanceTest, LargeConsistentGrid_ReturnsEmpty) {
     /*
      * STL grid schematic (top view, z = 0):
      *
-     *   y=2  ●──────●──────●
-     *        │\     │\     │
-     *        │ \    │ \    │
-     *   y=1  ●──────●──────●
-     *        │\     │\     │
-     *        │ \    │ \    │
-     *   y=0  ●──────●──────●
-     *        x=0    x=1    x=2
+     *   y=2  ●--------●--------●
+     *        │ \      │ \      │
+     *        │  \     │  \     │
+     *        │   \    │   \    │
+     *        │    \   │    \   │
+     *        │     \  │     \  │
+     *        │      \ │      \ │
+     *   y=1  ●--------●--------●
+     *        │ \      │ \      │
+     *        │  \     │  \     │
+     *        │   \    │   \    │
+     *        │    \   │    \   │
+     *        │     \  │     \  │
+     *        │      \ │      \ │
+     *   y=0  ●--------●--------●
+     *        x=0      x=1      x=2
      *
      * Each cell [i,j] is split into two triangles with consistent winding:
      *
@@ -479,14 +487,22 @@ TEST(ReorientTrianglePerformanceTest, LargeInconsistentGrid_ReturnsAllButSeed) {
     /*
      * STL grid schematic (top view, z = 0):
      *
-     *   y=2  ●──────●──────●
-     *        │\     │\     │
-     *        │ \    │ \    │
-     *   y=1  ●──────●──────●
-     *        │\     │\     │
-     *        │ \    │ \    │
-     *   y=0  ●──────●──────●
-     *        x=0    x=1    x=2
+     *   y=2  ●--------●--------●
+     *        │ \      │ \      │
+     *        │  \     │  \     │
+     *        │   \    │   \    │
+     *        │    \   │    \   │
+     *        │     \  │     \  │
+     *        │      \ │      \ │
+     *   y=1  ●--------●--------●
+     *        │ \      │ \      │
+     *        │  \     │  \     │
+     *        │   \    │   \    │
+     *        │    \   │    \   │
+     *        │     \  │     \  │
+     *        │      \ │      \ │
+     *   y=0  ●--------●--------●
+     *        x=0      x=1      x=2
      *
      * Each cell [i,j] is split into two triangles with inconsistent winding:
      *
@@ -522,11 +538,15 @@ TEST(ReorientTrianglePerformanceTest, LongStripAllInconsistent_ReturnsAllButSeed
     /*
      * STL strip schematic (top view, z = 0):
      *
-     *   y=1  ●──────●──────●──────●
-     *        │\  *  │\  *  │\  *  │
-     *        │ \    │ \    │ \    │
-     *   y=0  ●──────●──────●──────●
-     *        x=0    x=1    x=2    x=3
+     *   y=1  ●--------●--------●--------●--------●
+     *        │ \      │ \      │ \      │ \      │
+     *        │  \     │  \     │  \     │  \     │
+     *        │   \    │   \    │   \    │   \    │
+     *        │    \   │    \   │    \   │    \   │
+     *        │     \  │     \  │     \  │     \  │
+     *        │      \ │      \ │      \ │      \ │
+     *   y=0  ●--------●--------●--------●--------●
+     *        x=0      x=1      x=2      x=3      x=4
      *
      * Each quad [k, k+1] is split into two triangles:
      *
@@ -563,11 +583,15 @@ TEST(ReorientTrianglePerformanceTest, TwoDisconnectedComponents_OnlySeedComponen
     /*
      * STL strip schematic (top view, z = 0):
      *
-     *   y=1  ●──────●──────●──────●
-     *        │\  *  │\  *  │\  *  │
-     *        │ \    │ \    │ \    │
-     *   y=0  ●──────●──────●──────●
-     *        x=0    x=1    x=2    x=3
+     *   y=1  ●--------●--------●--------●--------●
+     *        │ \      │ \      │ \      │ \      │
+     *        │  \     │  \     │  \     │  \     │
+     *        │   \    │   \    │   \    │   \    │
+     *        │    \   │    \   │    \   │    \   │
+     *        │     \  │     \  │     \  │     \  │
+     *        │      \ │      \ │      \ │      \ │
+     *   y=0  ●--------●--------●--------●--------●
+     *        x=0      x=1      x=2      x=3      x=4
      *
      * Each quad [k, k+1] is split into two triangles:
      *
@@ -625,11 +649,15 @@ TEST(ReorientTrianglePerformanceTest, FiveDisconnectedComponents_OnlySeedCompone
     /*
      * STL strip schematic (top view, z = 0):
      *
-     *   y=1  ●──────●──────●──────●
-     *        │\  *  │\  *  │\  *  │
-     *        │ \    │ \    │ \    │
-     *   y=0  ●──────●──────●──────●
-     *        x=0    x=1    x=2    x=3
+     *   y=1  ●--------●--------●--------●--------●
+     *        │ \      │ \      │ \      │ \      │
+     *        │  \     │  \     │  \     │  \     │
+     *        │   \    │   \    │   \    │   \    │
+     *        │    \   │    \   │    \   │    \   │
+     *        │     \  │     \  │     \  │     \  │
+     *        │      \ │      \ │      \ │      \ │
+     *   y=0  ●--------●--------●--------●--------●
+     *        x=0      x=1      x=2      x=3      x=4
      *
      * Each quad [k, k+1] is split into two triangles:
      *
