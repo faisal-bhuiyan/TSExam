@@ -269,16 +269,16 @@ TEST(TriangleMeshEdgeConnectivity, TwoTrianglesSharedEdgeHasTwoIndices) {
      *
      *   (0,1) ●──────● (1,1)
      *         │    / │
-     *         │T0/T1 │
+     *          T0/T1 │
      *         │ /    │
      *   (0,0) ●──────● (1,0)
      *
      * Triangles:
-     *   T0: (0,0,0) -> (1,0,0) -> (0,1,0)
-     *   T1: (1,0,0) -> (1,1,0) -> (0,1,0)
+     *   T0: (0,0,0) -> (1,1,0) -> (0,1,0)
+     *   T1: (0,0,0) -> (1,1,0) -> (1,0,0)
      *
-     * Shared edge:
-     *   (1,0,0) <-> (0,1,0)
+     * Shared edge (interior):
+     *   (0,0,0) <-> (1,1,0)   -> two triangle indices
      *
      * Expectation:
      *   The shared edge appears in the edge connectivity map
@@ -290,15 +290,15 @@ TEST(TriangleMeshEdgeConnectivity, TwoTrianglesSharedEdgeHasTwoIndices) {
         facet normal 0 0 1
             outer loop
             vertex 0 0 0
-            vertex 1 0 0
+            vertex 1 1 0
             vertex 0 1 0
             endloop
         endfacet
         facet normal 0 0 1
             outer loop
-            vertex 1 0 0
+            vertex 0 0 0
             vertex 1 1 0
-            vertex 0 1 0
+            vertex 1 0 0
             endloop
         endfacet
         endsolid two
@@ -306,9 +306,9 @@ TEST(TriangleMeshEdgeConnectivity, TwoTrianglesSharedEdgeHasTwoIndices) {
     TriangleMesh mesh = make_mesh_from_stl(stl);
     const auto& connectivity = mesh.GetEdgeConnectivity();
 
-    // Shared edge (0,1,0)-(1,0,0) in canonical form is (0,1,0), (1,0,0)
-    Point p01{0., 1., 0.}, p10{1., 0., 0.};
-    Edge shared_edge = make_edge(p01, p10);
+    // Shared edge (0,0,0)-(1,1,0) in canonical form is (0,0,0), (1,1,0)
+    Point p00{0., 0., 0.}, p11{1., 1., 0.};
+    Edge shared_edge = make_edge(p00, p11);
     auto it = connectivity.find(shared_edge);
 
     ASSERT_NE(it, connectivity.end());                // edge found
@@ -333,17 +333,17 @@ TEST(TriangleMeshEdgeConnectivity, TwoTrianglesBoundaryEdgesHaveBoundaryIndex) {
      *   (0,0) ●──────● (1,0)
      *
      * Triangles:
-     *   T0: (0,0,0) -> (1,0,0) -> (0,1,0)
-     *   T1: (1,0,0) -> (1,1,0) -> (0,1,0)
+     *   T0: (0,0,0) -> (1,1,0) -> (0,1,0)
+     *   T1: (0,0,0) -> (1,1,0) -> (1,0,0)
      *
      * Shared edge (interior):
-     *   (1,0,0) <-> (0,1,0)   -> two triangle indices
+     *   (0,0,0) <-> (1,1,0)   -> two triangle indices
      *
      * Boundary edges (appear in only one triangle):
-     *   T0 boundary: (0,0,0) <-> (1,0,0)
      *   T0 boundary: (0,0,0) <-> (0,1,0)
+     *   T0 boundary: (0,1,0) <-> (1,1,0)
+     *   T1 boundary: (0,0,0) <-> (1,0,0)
      *   T1 boundary: (1,0,0) <-> (1,1,0)
-     *   T1 boundary: (1,1,0) <-> (0,1,0)
      *
      * Expectation:
      *   For a boundary edge like (0,0,0) <-> (1,0,0),
@@ -355,15 +355,15 @@ TEST(TriangleMeshEdgeConnectivity, TwoTrianglesBoundaryEdgesHaveBoundaryIndex) {
         facet normal 0 0 1
             outer loop
             vertex 0 0 0
-            vertex 1 0 0
+            vertex 1 1 0
             vertex 0 1 0
             endloop
         endfacet
         facet normal 0 0 1
             outer loop
-            vertex 1 0 0
+            vertex 0 0 0
             vertex 1 1 0
-            vertex 0 1 0
+            vertex 1 0 0
             endloop
         endfacet
         endsolid two
@@ -372,9 +372,9 @@ TEST(TriangleMeshEdgeConnectivity, TwoTrianglesBoundaryEdgesHaveBoundaryIndex) {
     TriangleMesh mesh = make_mesh_from_stl(stl);
     const auto& connectivity = mesh.GetEdgeConnectivity();
 
-    // Boundary edge on first triangle: (0,0,0)-(1,0,0)
-    Edge e_00_10 = make_edge({0., 0., 0.}, {1., 0., 0.});
-    auto it = connectivity.find(e_00_10);
+    // Boundary edge on first triangle: (0,0,0)-(0,1,0)
+    Edge e_00_01 = make_edge({0., 0., 0.}, {0., 1., 0.});
+    auto it = connectivity.find(e_00_01);
     ASSERT_NE(it, connectivity.end());
     EXPECT_EQ(it->second[0], 0);                       // triangle index 0
     EXPECT_EQ(it->second[1], kBoundaryTriangleIndex);  // boundary index
