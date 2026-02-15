@@ -12,12 +12,14 @@
 #include <gtest/gtest.h>
 
 #include "problem_1/geometry.hpp"
+#include "problem_1/stl_io.hpp"
 #include "problem_1/triangle_mesh.hpp"
 #include "problem_1/void_detection.hpp"
 
 using tsexam::problem1::AxisAlignedBoundingBox;
 using tsexam::problem1::compute_component_aabb;
 using tsexam::problem1::ConnectedComponent;
+using tsexam::problem1::convert_binary_stl_to_ascii;
 using tsexam::problem1::export_voids_to_stl;
 using tsexam::problem1::find_connected_components;
 using tsexam::problem1::identify_voids;
@@ -839,52 +841,7 @@ TEST(ExportVoidsToStl, WritesBigCubeWithSeveralVoidsToStl) {
 // detect voids in geometry_with_voids.stl
 //---------------------------------------------------------------------------
 
-/**
- * @brief Convert a binary STL file to an ASCII STL file
- * @param binary_path The path to the binary STL file
- * @param ascii_path The path to the ASCII STL file
- */
-void convert_binary_stl_to_ascii(const std::string& binary_path, const std::string& ascii_path) {
-    std::ifstream in(binary_path, std::ios::binary);
-    if (!in) {
-        throw std::runtime_error("Failed to open binary STL: " + binary_path);
-    }
-
-    std::ofstream out(ascii_path);
-    if (!out) {
-        throw std::runtime_error("Failed to open ASCII STL: " + ascii_path);
-    }
-
-    // Skip 80-byte header
-    char header[80];
-    in.read(header, 80);
-
-    // Read triangle count
-    std::uint32_t num_triangles{0};
-    in.read(reinterpret_cast<char*>(&num_triangles), sizeof(num_triangles));
-
-    out << "solid converted\n";
-    for (std::uint32_t i{0}; i < num_triangles; ++i) {
-        float normal[3];
-        float v[9];
-        std::uint16_t attr;
-
-        in.read(reinterpret_cast<char*>(normal), sizeof(normal));
-        in.read(reinterpret_cast<char*>(v), sizeof(v));
-        in.read(reinterpret_cast<char*>(&attr), sizeof(attr));
-
-        out << "  facet normal 0 0 0\n";
-        out << "    outer loop\n";
-        out << "      vertex " << v[0] << " " << v[1] << " " << v[2] << "\n";
-        out << "      vertex " << v[3] << " " << v[4] << " " << v[5] << "\n";
-        out << "      vertex " << v[6] << " " << v[7] << " " << v[8] << "\n";
-        out << "    endloop\n";
-        out << "  endfacet\n";
-    }
-    out << "endsolid converted\n";
-}
-
-TEST(VoidDetection, GeometryWithVoidsBinaryStlDetectsVoids) {
+TEST(VoidDetection, GeometryWithVoids_BinaryStl) {
     std::string binary_path = "geometry_with_voids.stl";
     if (!std::filesystem::exists(binary_path)) {
         // try relative path
@@ -929,7 +886,7 @@ TEST(VoidDetection, GeometryWithVoidsBinaryStlDetectsVoids) {
     std::cout << "[VoidDetection] Timing (ms)\n"
               << "  Convert binary STL to ASCII:  "
               << std::chrono::duration_cast<milliseconds>(t1 - t0).count() << " ms\n"
-              << "  Build triangle mesh:          "
+              << "  Build triangle mesh (edge connectivity):          "
               << std::chrono::duration_cast<milliseconds>(t2 - t1).count() << " ms\n"
               << "  Find connected components:     "
               << std::chrono::duration_cast<milliseconds>(t3 - t2).count() << " ms\n"
